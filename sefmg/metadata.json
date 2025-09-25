@@ -1,5 +1,5 @@
-
 {
   "name": "Simulador de Cenários – Auditor Fiscal SEF/MG",
-  "description": "Um simulador interativo que permite comparar cenários de remuneração da carreira de Auditor Fiscal da Receita Estadual da Secretaria de Estado de Fazenda de Minas Gerais (SEF/MG)."
+  "description": "Um simulador interativo que permite comparar cenários de remuneração da carreira de Auditor Fiscal da Receita Estadual da Secretaria de Estado de Fazenda de Minas Gerais (SEF/MG).",
+  "requestFramePermissions": []
 }
