@@ -1,6 +1,7 @@
 import React from 'react';
 import { AnnualData, Scenario } from '../types';
 import Card from './ui/Card';
+import { GEPI_POINTS, VI_DAILY_VALUE } from '../constants';
 
 interface CalculationDetailsProps {
     scenario: Scenario | null;
@@ -32,9 +33,16 @@ const CalculationDetails: React.FC<CalculationDetailsProps> = ({ scenario, yearD
             </Card>
         );
     }
+    
+    // Provide defaults for parameters that may be missing from older scenarios in localStorage
+    const {
+        gepiPoints = GEPI_POINTS,
+        workingDays = 20, // Default based on form initializer
+        viDailyValue = VI_DAILY_VALUE,
+    } = scenario.parameters;
 
-    const gepiLabel = `GEPI (${scenario.parameters.gepiPoints.toLocaleString('pt-BR')} pts x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(yearData.gepiPointValue)})`;
-    const viLabel = `Verba Indenizatória (VI) (${scenario.parameters.workingDays} dias x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(scenario.parameters.viDailyValue)})`;
+    const gepiLabel = `GEPI (${gepiPoints.toLocaleString('pt-BR')} pts x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(yearData.gepiPointValue)})`;
+    const viLabel = `Verba Indenizatória (VI) (${workingDays} dias x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(viDailyValue)})`;
     
     return (
         <Card>
