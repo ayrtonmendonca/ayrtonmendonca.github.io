@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Scenario, ScenarioParameters } from '../types';
-import { SCENARIO_COLORS, CAREER_POSITIONS } from '../constants';
+import { SCENARIO_COLORS, CAREER_POSITIONS, BASE_SALARIES, GEPI_POINTS, GEPI_POINT_VALUE, VI_DAILY_VALUE, DEFAULT_PREVCOM_PERCENTAGE } from '../constants';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import Input from './ui/Input';
@@ -29,8 +28,14 @@ const ScenarioControls: React.FC<ScenarioControlsProps> = ({ scenarios, addScena
         dependents: 0,
         workingDays: 20,
         salaryAdjustment: 0,
+        viDailyValue: VI_DAILY_VALUE,
+        baseSalaryOverride: BASE_SALARIES[CAREER_POSITIONS[0]],
+        gepiPoints: GEPI_POINTS,
+        gepiPointValue: GEPI_POINT_VALUE,
         gepiAdjustment: 0,
-        viAdjustment: 0,
+        isSindifiscoMember: true,
+        isPrevcomMember: true,
+        prevcomContributionPercentage: DEFAULT_PREVCOM_PERCENTAGE,
     });
     const [scenarioName, setScenarioName] = useState('Novo Cenário');
     
@@ -70,8 +75,14 @@ const ScenarioControls: React.FC<ScenarioControlsProps> = ({ scenarios, addScena
             dependents: 0,
             workingDays: 20,
             salaryAdjustment: 0,
+            viDailyValue: VI_DAILY_VALUE,
+            baseSalaryOverride: BASE_SALARIES[CAREER_POSITIONS[0]],
+            gepiPoints: GEPI_POINTS,
+            gepiPointValue: GEPI_POINT_VALUE,
             gepiAdjustment: 0,
-            viAdjustment: 0,
+            isSindifiscoMember: true,
+            isPrevcomMember: true,
+            prevcomContributionPercentage: DEFAULT_PREVCOM_PERCENTAGE,
         });
     };
 
@@ -91,14 +102,60 @@ const ScenarioControls: React.FC<ScenarioControlsProps> = ({ scenarios, addScena
                 <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">{isEditing ? 'Editar Cenário' : 'Adicionar Cenário'}</h3>
                 <div className="space-y-4">
                     <Input label="Nome do Cenário" id="scenarioName" value={scenarioName} onChange={(e) => setScenarioName(e.target.value)} />
-                    <Select label="Nível na Carreira" id="level" value={currentParams.level} onChange={(e) => setCurrentParams(p => ({ ...p, level: e.target.value }))}>
+                    <Select label="Nível na Carreira" id="level" value={currentParams.level} onChange={(e) => {
+                        const newLevel = e.target.value;
+                        setCurrentParams(p => ({
+                            ...p,
+                            level: newLevel,
+                            baseSalaryOverride: BASE_SALARIES[newLevel] || 0
+                        }));
+                    }}>
                         {CAREER_POSITIONS.map(position => <option key={position} value={position}>{formatPositionName(position)}</option>)}
                     </Select>
+                    <Input label="Vencimento Básico (R$)" id="baseSalaryOverride" type="number" step="0.01" value={currentParams.baseSalaryOverride} onChange={(e) => setCurrentParams(p => ({ ...p, baseSalaryOverride: parseFloat(e.target.value) || 0 }))} />
+                    <Input label="Pontos GEPI" id="gepiPoints" type="number" value={currentParams.gepiPoints} onChange={(e) => setCurrentParams(p => ({ ...p, gepiPoints: parseFloat(e.target.value) || 0 }))} />
+                    <Input label="Valor do Ponto GEPI (R$)" id="gepiPointValue" type="number" step="0.01" value={currentParams.gepiPointValue} onChange={(e) => setCurrentParams(p => ({ ...p, gepiPointValue: parseFloat(e.target.value) || 0 }))} />
+                    <Input label="Reajuste GEPI Média anual (%)" id="gepiAdjustment" type="number" value={currentParams.gepiAdjustment} onChange={(e) => setCurrentParams(p => ({ ...p, gepiAdjustment: parseFloat(e.target.value) || 0 }))} />
                     <Input label="Dependentes de IR" id="dependents" type="number" min="0" value={currentParams.dependents} onChange={(e) => setCurrentParams(p => ({ ...p, dependents: parseInt(e.target.value) || 0 }))} />
                     <Input label="Dias Trabalhados (Ajuda de Custo)" id="workingDays" type="number" min="0" value={currentParams.workingDays} onChange={(e) => setCurrentParams(p => ({ ...p, workingDays: parseInt(e.target.value) || 0 }))} />
                     <Input label="Reajuste Vencimento (%)" id="salaryAdjustment" type="number" value={currentParams.salaryAdjustment} onChange={(e) => setCurrentParams(p => ({ ...p, salaryAdjustment: parseFloat(e.target.value) || 0 }))} />
-                    <Input label="Reajuste Ponto GEPI (centavos)" id="gepiAdjustment" type="number" value={currentParams.gepiAdjustment} onChange={(e) => setCurrentParams(p => ({ ...p, gepiAdjustment: parseFloat(e.target.value) || 0 }))} />
-                    <Input label="Reajuste VI (R$)" id="viAdjustment" type="number" value={currentParams.viAdjustment} onChange={(e) => setCurrentParams(p => ({ ...p, viAdjustment: parseFloat(e.target.value) || 0 }))} />
+                    <Input label="Valor Diário VI (R$)" id="viDailyValue" type="number" step="0.01" value={currentParams.viDailyValue} onChange={(e) => setCurrentParams(p => ({ ...p, viDailyValue: parseFloat(e.target.value) || 0 }))} />
+                     <div className="space-y-2 rounded-md border border-gray-200 dark:border-gray-700 p-3">
+                        <div className="flex items-center space-x-2">
+                           <input
+                                type="checkbox"
+                                id="isPrevcomMember"
+                                checked={currentParams.isPrevcomMember}
+                                onChange={(e) => setCurrentParams(p => ({ ...p, isPrevcomMember: e.target.checked }))}
+                                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                            <label htmlFor="isPrevcomMember" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Associado à PREVCOM-MG
+                            </label>
+                        </div>
+                        {currentParams.isPrevcomMember && (
+                            <Input 
+                                label="Participação PREVCOM (%)" 
+                                id="prevcomPercentage" 
+                                type="number" 
+                                step="0.01"
+                                value={currentParams.prevcomContributionPercentage} 
+                                onChange={(e) => setCurrentParams(p => ({ ...p, prevcomContributionPercentage: parseFloat(e.target.value) || 0 }))}
+                             />
+                        )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <input
+                            type="checkbox"
+                            id="isSindifiscoMember"
+                            checked={currentParams.isSindifiscoMember}
+                            onChange={(e) => setCurrentParams(p => ({ ...p, isSindifiscoMember: e.target.checked }))}
+                            className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        />
+                        <label htmlFor="isSindifiscoMember" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Filiado ao SINDIFISCO (desconto 1%)
+                        </label>
+                    </div>
                     <div className="flex space-x-2">
                         <Button onClick={handleSave}>{isEditing ? 'Salvar Alterações' : 'Adicionar Cenário'}</Button>
                         {isEditing && <Button variant="secondary" onClick={handleCancelEdit}>Cancelar</Button>}

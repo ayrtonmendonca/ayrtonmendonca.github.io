@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ChartData, Scenario, AnnualData } from '../types';
-import { PROJECTION_YEARS_DEFAULT, SCENARIO_COLORS, CAREER_POSITIONS } from '../constants';
+import { PROJECTION_YEARS_DEFAULT, SCENARIO_COLORS, CAREER_POSITIONS, BASE_SALARIES, GEPI_POINTS, GEPI_POINT_VALUE, VI_DAILY_VALUE, DEFAULT_PREVCOM_PERCENTAGE } from '../constants';
 import { calculateAnnualProjection } from '../services/remunerationCalculator';
 import useLocalStorage from '../hooks/useLocalStorage';
 import ScenarioControls from './ScenarioControls';
@@ -27,13 +27,19 @@ const ScenarioSimulator: React.FC = () => {
                     dependents: 0,
                     workingDays: 20,
                     salaryAdjustment: 0,
+                    viDailyValue: VI_DAILY_VALUE,
+                    baseSalaryOverride: BASE_SALARIES[CAREER_POSITIONS[0]],
+                    gepiPoints: GEPI_POINTS,
+                    gepiPointValue: GEPI_POINT_VALUE,
                     gepiAdjustment: 0,
-                    viAdjustment: 0,
+                    isSindifiscoMember: true,
+                    isPrevcomMember: true,
+                    prevcomContributionPercentage: DEFAULT_PREVCOM_PERCENTAGE,
                 },
             };
             setScenarios([defaultScenario]);
             setSelectedScenarioId(defaultScenario.id);
-        } else if (!selectedScenarioId) {
+        } else if (!selectedScenarioId && scenarios.length > 0) {
              setSelectedScenarioId(scenarios[0].id);
         }
     }, [scenarios, selectedScenarioId, setScenarios]);

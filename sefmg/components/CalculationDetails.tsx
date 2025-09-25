@@ -32,6 +32,9 @@ const CalculationDetails: React.FC<CalculationDetailsProps> = ({ scenario, yearD
             </Card>
         );
     }
+
+    const gepiLabel = `GEPI (${scenario.parameters.gepiPoints.toLocaleString('pt-BR')} pts x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(yearData.gepiPointValue)})`;
+    const viLabel = `Verba Indenizatória (VI) (${scenario.parameters.workingDays} dias x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(scenario.parameters.viDailyValue)})`;
     
     return (
         <Card>
@@ -44,11 +47,13 @@ const CalculationDetails: React.FC<CalculationDetailsProps> = ({ scenario, yearD
                     <h4 className="font-semibold text-lg mb-2 text-gray-700 dark:text-gray-300">Remuneração Mensal</h4>
                     <DetailRow label={`Vencimento Básico (${formatPositionName(yearData.level)})`} value={yearData.baseSalary} />
                     {yearData.ade > 0 && <DetailRow label="Adicional de Desempenho (ADE)" value={yearData.ade} />}
-                    <DetailRow label="GEPI" value={yearData.gepi} />
-                    <DetailRow label="Verba Indenizatória (VI)" value={yearData.vi} />
+                    <DetailRow label={gepiLabel} value={yearData.gepi} />
+                    <DetailRow label={viLabel} value={yearData.vi} />
                     <DetailRow label="Remuneração Bruta" value={yearData.grossSalary} isTotal={true}/>
-                    <DetailRow label="Previdência" value={yearData.pensionDiscount} isNegative={true} />
+                    <DetailRow label="Previdência (RPPS)" value={yearData.pensionDiscount} isNegative={true} />
+                    {yearData.prevcomDiscount > 0 && <DetailRow label="Previdência Complementar (PREVCOM)" value={yearData.prevcomDiscount} isNegative={true} />}
                     <DetailRow label="Imposto de Renda (IRRF)" value={yearData.irDiscount} isNegative={true} />
+                    {yearData.sindifiscoDiscount > 0 && <DetailRow label="Contribuição SINDIFISCO" value={yearData.sindifiscoDiscount} isNegative={true} />}
                     <DetailRow label="Remuneração Líquida Mensal" value={yearData.netSalary} isTotal={true}/>
                 </div>
                  <div>

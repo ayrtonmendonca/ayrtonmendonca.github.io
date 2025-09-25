@@ -1,11 +1,16 @@
-
 export interface ScenarioParameters {
     level: string;
     dependents: number;
     workingDays: number;
     salaryAdjustment: number;
+    viDailyValue: number;
+    baseSalaryOverride: number;
+    gepiPoints: number;
+    gepiPointValue: number;
     gepiAdjustment: number;
-    viAdjustment: number;
+    isSindifiscoMember: boolean;
+    isPrevcomMember: boolean;
+    prevcomContributionPercentage: number;
 }
 
 export interface Scenario {
@@ -21,10 +26,13 @@ export interface MonthlyBreakdown {
 
     baseSalary: number;
     gepi: number;
+    gepiPointValue: number;
     vi: number;
     ade: number;
-    pensionDiscount: number;
+    pensionDiscount: number; // RPPS
+    prevcomDiscount: number; // Complementary
     irDiscount: number;
+    sindifiscoDiscount: number;
     level: string;
 }
 

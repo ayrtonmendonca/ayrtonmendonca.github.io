@@ -1,4 +1,3 @@
-
 import {
     Scenario,
     AnnualData,
@@ -6,9 +5,6 @@ import {
 } from '../types';
 import {
     BASE_SALARIES,
-    GEPI_POINTS,
-    GEPI_POINT_VALUE,
-    VI_DAILY_VALUE,
     PENSION_BRACKETS,
     IR_BRACKETS,
     DEDUCTION_PER_DEPENDENT,
@@ -18,11 +14,12 @@ import {
     ADE_CYCLE_YEARS,
     ADE_PERCENTAGE_PER_CYCLE,
     ADE_MAX_CYCLES,
+    RGPS_CEILING,
 } from '../constants';
 
-const calculatePension = (baseSalary: number): number => {
+const calculateRPPS = (calculationBase: number): number => {
     let totalContribution = 0;
-    let remainingSalary = baseSalary;
+    let remainingSalary = calculationBase;
     let previousLimit = 0;
 
     for (const bracket of PENSION_BRACKETS) {
@@ -31,6 +28,7 @@ const calculatePension = (baseSalary: number): number => {
             totalContribution += taxableAmountInBracket * bracket.rate;
             remainingSalary -= taxableAmountInBracket;
             previousLimit = bracket.limit;
+            if (bracket.limit >= calculationBase) break;
         } else {
             break;
         }
@@ -73,8 +71,14 @@ export const calculateBreakdownForYear = (scenario: Scenario, yearsInService: nu
         dependents,
         workingDays,
         salaryAdjustment,
+        viDailyValue,
+        baseSalaryOverride,
+        gepiPoints,
+        gepiPointValue,
         gepiAdjustment,
-        viAdjustment
+        isSindifiscoMember,
+        isPrevcomMember,
+        prevcomContributionPercentage
     } = scenario.parameters;
 
     // Determine dynamic values for the given year
@@ -82,22 +86,42 @@ export const calculateBreakdownForYear = (scenario: Scenario, yearsInService: nu
     const adePercentage = getAdePercentage(yearsInService);
 
     // Calculate components
-    const baseSalaryForPosition = BASE_SALARIES[effectivePosition] || 0;
+    const originalBaseForScenario = BASE_SALARIES[scenario.parameters.level] || 1;
+    const overrideFactor = baseSalaryOverride / originalBaseForScenario;
+    const baseSalaryForPosition = (BASE_SALARIES[effectivePosition] || 0) * overrideFactor;
+    
+    const adjustedGepiPointValue = gepiPointValue * Math.pow(1 + (gepiAdjustment / 100), yearsInService);
+
     const baseSalary = baseSalaryForPosition * (1 + salaryAdjustment / 100);
     const ade = baseSalary * adePercentage;
-    const gepi = GEPI_POINTS * (GEPI_POINT_VALUE + (gepiAdjustment / 100));
-    const vi = workingDays * (VI_DAILY_VALUE + viAdjustment);
+    const gepi = gepiPoints * adjustedGepiPointValue;
+    const vi = workingDays * viDailyValue;
 
     const taxableIncome = baseSalary + gepi + ade;
     const grossSalary = taxableIncome + vi;
 
-    const pensionDiscount = calculatePension(taxableIncome);
+    const sindifiscoDiscount = isSindifiscoMember ? (baseSalary + gepi) * 0.01 : 0;
+
+    // Pension Calculations
+    let pensionDiscount = 0;
+    let prevcomDiscount = 0;
+
+    if (isPrevcomMember) {
+        const rppsBase = Math.min(taxableIncome, RGPS_CEILING);
+        pensionDiscount = calculateRPPS(rppsBase);
+
+        const prevcomBase = Math.max(0, taxableIncome - RGPS_CEILING);
+        prevcomDiscount = prevcomBase * (prevcomContributionPercentage / 100);
+    } else {
+        pensionDiscount = calculateRPPS(taxableIncome);
+    }
+
     const dependentsDeduction = dependents * DEDUCTION_PER_DEPENDENT;
-    const irCalculationBase = taxableIncome - pensionDiscount - dependentsDeduction;
+    const irCalculationBase = taxableIncome - pensionDiscount - prevcomDiscount - dependentsDeduction;
 
     const irDiscount = calculateIR(Math.max(0, irCalculationBase));
 
-    const netSalary = grossSalary - pensionDiscount - irDiscount;
+    const netSalary = grossSalary - pensionDiscount - prevcomDiscount - irDiscount - sindifiscoDiscount;
 
     return {
         grossSalary,
@@ -107,8 +131,11 @@ export const calculateBreakdownForYear = (scenario: Scenario, yearsInService: nu
         vi,
         ade,
         pensionDiscount,
+        prevcomDiscount,
         irDiscount,
+        sindifiscoDiscount,
         level: effectivePosition,
+        gepiPointValue: adjustedGepiPointValue,
     };
 };
 
