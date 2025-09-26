@@ -75,7 +75,6 @@ export const calculateBreakdownForYear = (scenario: Scenario, yearsInService: nu
         baseSalaryOverride,
         gepiPoints,
         gepiPointValue,
-        gepiAdjustment,
         isSindifiscoMember,
         isPrevcomMember,
         prevcomContributionPercentage
@@ -90,9 +89,10 @@ export const calculateBreakdownForYear = (scenario: Scenario, yearsInService: nu
     const overrideFactor = baseSalaryOverride / originalBaseForScenario;
     const baseSalaryForPosition = (BASE_SALARIES[effectivePosition] || 0) * overrideFactor;
     
-    const adjustedGepiPointValue = gepiPointValue * Math.pow(1 + (gepiAdjustment / 100), yearsInService);
+    const oneTimeAdjustmentFactor = 1 + (salaryAdjustment / 100);
+    const adjustedGepiPointValue = gepiPointValue * oneTimeAdjustmentFactor;
 
-    const baseSalary = baseSalaryForPosition * (1 + salaryAdjustment / 100);
+    const baseSalary = baseSalaryForPosition * oneTimeAdjustmentFactor;
     const ade = baseSalary * adePercentage;
     const gepi = gepiPoints * adjustedGepiPointValue;
     const vi = workingDays * viDailyValue;

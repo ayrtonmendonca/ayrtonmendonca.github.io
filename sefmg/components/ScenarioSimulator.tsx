@@ -21,24 +21,27 @@ const ScenarioSimulator: React.FC = () => {
         if (scenarios.length > 0) {
             let needsUpdate = false;
             const sanitizedScenarios = scenarios.map(s => {
-                // FIX: Explicitly type `currentParams` to handle cases where `s.parameters` might be missing from old localStorage data.
-                const currentParams: Partial<ScenarioParameters> = s.parameters || {};
+                // FIX: Explicitly type `currentParams` to handle cases where `s.parameters` might be missing from old localStorage data,
+                // and handle migration from old data structure with `gepiAdjustment`.
+                const currentParams: Partial<ScenarioParameters> & { gepiAdjustment?: number } = s.parameters || {};
+
+                const salaryAdjustmentValue = currentParams.salaryAdjustment ?? currentParams.gepiAdjustment ?? 0;
+
                 const migratedParams: ScenarioParameters = {
                     level: currentParams.level ?? CAREER_POSITIONS[0],
                     dependents: currentParams.dependents ?? 0,
                     workingDays: currentParams.workingDays ?? 20,
-                    salaryAdjustment: currentParams.salaryAdjustment ?? 0,
+                    salaryAdjustment: salaryAdjustmentValue,
                     viDailyValue: currentParams.viDailyValue ?? VI_DAILY_VALUE,
                     gepiPoints: currentParams.gepiPoints ?? GEPI_POINTS,
                     gepiPointValue: currentParams.gepiPointValue ?? GEPI_POINT_VALUE,
-                    gepiAdjustment: currentParams.gepiAdjustment ?? 0,
                     isSindifiscoMember: currentParams.isSindifiscoMember ?? true,
                     isPrevcomMember: currentParams.isPrevcomMember ?? true,
                     prevcomContributionPercentage: currentParams.prevcomContributionPercentage ?? DEFAULT_PREVCOM_PERCENTAGE,
                     baseSalaryOverride: currentParams.baseSalaryOverride ?? BASE_SALARIES[currentParams.level || CAREER_POSITIONS[0]],
                 };
                 
-                if(JSON.stringify(currentParams) !== JSON.stringify(migratedParams)) {
+                if(JSON.stringify(s.parameters) !== JSON.stringify(migratedParams)) {
                     needsUpdate = true;
                 }
 
@@ -67,7 +70,6 @@ const ScenarioSimulator: React.FC = () => {
                     baseSalaryOverride: BASE_SALARIES[CAREER_POSITIONS[0]],
                     gepiPoints: GEPI_POINTS,
                     gepiPointValue: GEPI_POINT_VALUE,
-                    gepiAdjustment: 0,
                     isSindifiscoMember: true,
                     isPrevcomMember: true,
                     prevcomContributionPercentage: DEFAULT_PREVCOM_PERCENTAGE,

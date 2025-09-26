@@ -32,7 +32,6 @@ const ScenarioControls: React.FC<ScenarioControlsProps> = ({ scenarios, addScena
         baseSalaryOverride: BASE_SALARIES[CAREER_POSITIONS[0]],
         gepiPoints: GEPI_POINTS,
         gepiPointValue: GEPI_POINT_VALUE,
-        gepiAdjustment: 0,
         isSindifiscoMember: true,
         isPrevcomMember: true,
         prevcomContributionPercentage: DEFAULT_PREVCOM_PERCENTAGE,
@@ -79,7 +78,6 @@ const ScenarioControls: React.FC<ScenarioControlsProps> = ({ scenarios, addScena
             baseSalaryOverride: BASE_SALARIES[CAREER_POSITIONS[0]],
             gepiPoints: GEPI_POINTS,
             gepiPointValue: GEPI_POINT_VALUE,
-            gepiAdjustment: 0,
             isSindifiscoMember: true,
             isPrevcomMember: true,
             prevcomContributionPercentage: DEFAULT_PREVCOM_PERCENTAGE,
@@ -115,10 +113,9 @@ const ScenarioControls: React.FC<ScenarioControlsProps> = ({ scenarios, addScena
                     <Input label="Vencimento Básico (R$)" id="baseSalaryOverride" type="number" step="0.01" value={currentParams.baseSalaryOverride} onChange={(e) => setCurrentParams(p => ({ ...p, baseSalaryOverride: parseFloat(e.target.value) || 0 }))} />
                     <Input label="Pontos GEPI" id="gepiPoints" type="number" value={currentParams.gepiPoints} onChange={(e) => setCurrentParams(p => ({ ...p, gepiPoints: parseFloat(e.target.value) || 0 }))} />
                     <Input label="Valor do Ponto GEPI (R$)" id="gepiPointValue" type="number" step="0.01" value={currentParams.gepiPointValue} onChange={(e) => setCurrentParams(p => ({ ...p, gepiPointValue: parseFloat(e.target.value) || 0 }))} />
-                    <Input label="Reajuste GEPI Média anual (%)" id="gepiAdjustment" type="number" value={currentParams.gepiAdjustment} onChange={(e) => setCurrentParams(p => ({ ...p, gepiAdjustment: parseFloat(e.target.value) || 0 }))} />
+                    <Input label="Reajuste Geral Único (%)" id="salaryAdjustment" type="number" value={currentParams.salaryAdjustment} onChange={(e) => setCurrentParams(p => ({ ...p, salaryAdjustment: parseFloat(e.target.value) || 0 }))} />
                     <Input label="Dependentes de IR" id="dependents" type="number" min="0" value={currentParams.dependents} onChange={(e) => setCurrentParams(p => ({ ...p, dependents: parseInt(e.target.value) || 0 }))} />
                     <Input label="Dias Trabalhados (Ajuda de Custo)" id="workingDays" type="number" min="0" value={currentParams.workingDays} onChange={(e) => setCurrentParams(p => ({ ...p, workingDays: parseInt(e.target.value) || 0 }))} />
-                    <Input label="Reajuste Vencimento (%)" id="salaryAdjustment" type="number" value={currentParams.salaryAdjustment} onChange={(e) => setCurrentParams(p => ({ ...p, salaryAdjustment: parseFloat(e.target.value) || 0 }))} />
                     <Input label="Valor Diário VI (R$)" id="viDailyValue" type="number" step="0.01" value={currentParams.viDailyValue} onChange={(e) => setCurrentParams(p => ({ ...p, viDailyValue: parseFloat(e.target.value) || 0 }))} />
                      <div className="space-y-2 rounded-md border border-gray-200 dark:border-gray-700 p-3">
                         <div className="flex items-center space-x-2">

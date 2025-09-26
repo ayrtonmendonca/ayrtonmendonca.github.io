@@ -7,7 +7,6 @@ export interface ScenarioParameters {
     baseSalaryOverride: number;
     gepiPoints: number;
     gepiPointValue: number;
-    gepiAdjustment: number;
     isSindifiscoMember: boolean;
     isPrevcomMember: boolean;
     prevcomContributionPercentage: number;
