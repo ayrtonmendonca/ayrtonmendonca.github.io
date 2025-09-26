@@ -1,15 +1,15 @@
 
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ChartData, Scenario } from '../types';
+import { dadosGrafico, Cenario } from '../types';
 
 interface RemunerationChartProps {
-    data: ChartData[];
-    scenarios: Scenario[];
+    data: dadosGrafico[];
+    cenarios: Cenario[];
     onDataPointClick: (year: number) => void;
 }
 
-const RemunerationChart: React.FC<RemunerationChartProps> = ({ data, scenarios, onDataPointClick }) => {
+const RemunerationChart: React.FC<RemunerationChartProps> = ({ data, cenarios, onDataPointClick }) => {
     
     const CustomTooltip: React.FC<any> = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
@@ -39,13 +39,13 @@ const RemunerationChart: React.FC<RemunerationChartProps> = ({ data, scenarios, 
                 <YAxis tickFormatter={(value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact' }).format(value as number)} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />
-                {scenarios.map(scenario => (
+                {cenarios.map(cenario => (
                     <Line
-                        key={scenario.id}
+                        key={cenario.id}
                         type="monotone"
-                        dataKey={scenario.id}
-                        name={scenario.name}
-                        stroke={scenario.color}
+                        dataKey={cenario.id}
+                        name={cenario.nome}
+                        stroke={cenario.cor}
                         strokeWidth={2}
                         dot={{ r: 2 }}
                         activeDot={{ r: 6 }}

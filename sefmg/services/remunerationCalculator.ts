@@ -1,156 +1,184 @@
 import {
-    Scenario,
-    AnnualData,
-    MonthlyBreakdown
+    Cenario,
+    dadosAnuais,
+    detalhamentoMensal
 } from '../types';
 import {
-    BASE_SALARIES,
-    PENSION_BRACKETS,
-    IR_BRACKETS,
-    DEDUCTION_PER_DEPENDENT,
-    CAREER_POSITIONS,
-    YEARS_PER_GRADE,
-    ADE_START_YEARS,
-    ADE_CYCLE_YEARS,
-    ADE_PERCENTAGE_PER_CYCLE,
-    ADE_MAX_CYCLES,
-    RGPS_CEILING,
+    VENCIMENTO_BASICO,
+    FAIXAS_PENSAO,
+    FAIXAS_IR,
+    DEDUCAO_POR_DEPENDENTE,
+    NIVEL,
+    GRAU,
+    ANOS_PARA_PROGRESSAO,
+    ANOS_PARA_PROMOCAO,
+    ADE,
+    TETO_RGPS,
+    TETO_GEPI,
+    TETO_SERVIDOR_PUBLICO
 } from '../constants';
 
-const calculateRPPS = (calculationBase: number): number => {
-    let totalContribution = 0;
-    let remainingSalary = calculationBase;
-    let previousLimit = 0;
+const calcularRPPS = (baseDeCalculo: number): number => {
 
-    for (const bracket of PENSION_BRACKETS) {
-        if (remainingSalary > 0) {
-            const taxableAmountInBracket = Math.min(remainingSalary, bracket.limit - previousLimit);
-            totalContribution += taxableAmountInBracket * bracket.rate;
-            remainingSalary -= taxableAmountInBracket;
-            previousLimit = bracket.limit;
-            if (bracket.limit >= calculationBase) break;
-        } else {
-            break;
-        }
-    }
-    return totalContribution;
-};
-
-const calculateIR = (baseSalary: number): number => {
-    for (const bracket of IR_BRACKETS) {
-        if (baseSalary <= bracket.limit) {
-            return baseSalary * bracket.rate - bracket.deduction;
+    for (const faixa of FAIXAS_PENSAO) {
+        if (baseDeCalculo <= faixa.limite) {
+            return baseDeCalculo * faixa.taxa - faixa.deducao;
         }
     }
     return 0; // Should not be reached
 };
 
-const getEffectivePosition = (initialPosition: string, yearsInService: number): string => {
-    const initialIndex = CAREER_POSITIONS.indexOf(initialPosition);
-    if (initialIndex === -1) return initialPosition;
-
-    const progressionSteps = Math.floor(yearsInService / YEARS_PER_GRADE);
-    const newIndex = Math.min(initialIndex + progressionSteps, CAREER_POSITIONS.length - 1);
-    return CAREER_POSITIONS[newIndex];
+const calcularIR = (salarioBase: number): number => {
+    for (const faixa of FAIXAS_IR) {
+        if (salarioBase <= faixa.limite) {
+            return salarioBase * faixa.taxa - faixa.deducao;
+        }
+    }
+    return 0; // Should not be reached
 };
 
+const calcularPosicao = (posicaoAtual: string, anosNoServico: number, ultimaPromocao: number, ultimaProgressao: number, anoFuturo: number): string => {
+    let [nivel, grau] = posicaoAtual.split("-");
+    let idxNivel = NIVEL.indexOf(nivel);
+    let idxGrau = GRAU.indexOf(grau);
+    let anoAtual = new Date().getFullYear();
 
-const getAdePercentage = (yearsInService: number): number => {
-    // No ADE during the first 3 years of service (years 0, 1, 2)
-    if (yearsInService < ADE_START_YEARS) {
+    for (let ano = anoAtual + 1; ano <= anoFuturo; ano++) {
+        anosNoServico++;
+        if (anosNoServico < 3) {
+            continue;
+        }
+
+        if (ano - ultimaPromocao >= ANOS_PARA_PROMOCAO + 3) {
+            if (idxNivel < NIVEL.length - 1) {
+                idxNivel++;
+                idxGrau = 0; // volta pro grau A
+                ultimaPromocao = ano;
+                ultimaProgressao = ano; // reseta junto
+                nivel = NIVEL[idxNivel];
+                grau = GRAU[idxGrau];
+                continue; // se promoveu, não progride no mesmo ano
+            }
+        }
+
+        if (ano - ultimaProgressao >= ANOS_PARA_PROGRESSAO) {
+            if (idxGrau < GRAU.length - 1) {
+                idxGrau++;
+                ultimaProgressao = ano;
+                nivel = NIVEL[idxNivel];
+                grau = GRAU[idxGrau];
+            }
+        }
+    }
+    return `${NIVEL[idxNivel]}-${GRAU[idxGrau]}`;
+}
+
+const calcularADE = (anosNoServico: number): number => {
+    if (anosNoServico < ADE[0].ano) {
         return 0;
     }
-    const yearsSinceAdeStart = yearsInService - ADE_START_YEARS; // 0 for year 3, 1 for year 4...
-    const adeCycles = Math.floor(yearsSinceAdeStart / ADE_CYCLE_YEARS) + 1; // +1 for the initial grant
-    const effectiveCycles = Math.min(adeCycles, ADE_MAX_CYCLES);
-    return effectiveCycles * ADE_PERCENTAGE_PER_CYCLE;
+
+    // Procura o maior ano que seja <= anosNoServico
+    const adeEncontrado = [...ADE].reverse().find(item => anosNoServico >= item.ano);
+    return adeEncontrado ? adeEncontrado.valor : 0;
 };
 
-export const calculateBreakdownForYear = (scenario: Scenario, yearsInService: number): MonthlyBreakdown => {
+export const calcularPorAno = (cenario: Cenario, anoFuturo: number): detalhamentoMensal => {
     const {
-        dependents,
-        workingDays,
-        salaryAdjustment,
-        viDailyValue,
-        baseSalaryOverride,
-        gepiPoints,
-        gepiPointValue,
-        isSindifiscoMember,
-        isPrevcomMember,
-        prevcomContributionPercentage
-    } = scenario.parameters;
+        posicaoCarreira,
+        dependentes,
+        diasTrabalhados,
+        ajusteDeSalario,
+        valorVIDiaria,
+        pontosGEPI,
+        salarioBaseSobreposto,
+        valorPontoGEPI,
+        filiadoAoSindicato,
+        prevcom,
+        percentualDeContribuicaoDaPrevcom,
+        anoIngresso,
+        ultimaPromocao,
+        ultimaProgressao
+    } = cenario.parametros;
+
 
     // Determine dynamic values for the given year
-    const effectivePosition = getEffectivePosition(scenario.parameters.level, yearsInService);
-    const adePercentage = getAdePercentage(yearsInService);
+    //posicaoAtual: string, anosNoServico: number, ultimaPromocao: number, ultimaProgressao: number, anoFuturo: number
+    console.log(cenario.parametros);
+    const posicaoEfetiva = calcularPosicao(posicaoCarreira, anoIngresso, ultimaPromocao, ultimaProgressao, anoFuturo);
+    const percentualADE = calcularADE(anoFuturo - anoIngresso);
 
     // Calculate components
-    const originalBaseForScenario = BASE_SALARIES[scenario.parameters.level] || 1;
-    const overrideFactor = baseSalaryOverride / originalBaseForScenario;
-    const baseSalaryForPosition = (BASE_SALARIES[effectivePosition] || 0) * overrideFactor;
-    
-    const oneTimeAdjustmentFactor = 1 + (salaryAdjustment / 100);
-    const adjustedGepiPointValue = gepiPointValue * oneTimeAdjustmentFactor;
+    const salarioBaseParaPosicaoEfetiva = (VENCIMENTO_BASICO[posicaoEfetiva] || 0);
+    const fatorMultiplicacao = salarioBaseSobreposto / VENCIMENTO_BASICO[posicaoCarreira];
+    const salarioBaseParaPosicaoEfetivaCorrigido = salarioBaseParaPosicaoEfetiva * fatorMultiplicacao;
 
-    const baseSalary = baseSalaryForPosition * oneTimeAdjustmentFactor;
-    const ade = baseSalary * adePercentage;
-    const gepi = gepiPoints * adjustedGepiPointValue;
-    const vi = workingDays * viDailyValue;
+    const reajusteImediato = 1 + (ajusteDeSalario / 100);
+    const pontoGEPIAjustado = valorPontoGEPI * reajusteImediato;
 
-    const taxableIncome = baseSalary + gepi + ade;
-    const grossSalary = taxableIncome + vi;
+    const salarioBase = salarioBaseParaPosicaoEfetivaCorrigido * reajusteImediato;
+    const ade = salarioBase * percentualADE;
+    const gepi = pontosGEPI * pontoGEPIAjustado;
+    const vi = diasTrabalhados * valorVIDiaria;
+    const abateTetoGepi = Math.min(TETO_GEPI * VENCIMENTO_BASICO['II-J'] - gepi, 0);
+    const abateTetoServidorPublico = Math.min(salarioBase + gepi + ade - abateTetoGepi - TETO_SERVIDOR_PUBLICO, 0);
 
-    const sindifiscoDiscount = isSindifiscoMember ? (baseSalary + gepi) * 0.01 : 0;
+    const rendaTributavel = salarioBase + gepi + ade - abateTetoGepi - abateTetoServidorPublico;
+    const salarioBruto = rendaTributavel + vi;
+
+    const descontoSindifisco = filiadoAoSindicato ? (VENCIMENTO_BASICO['I-A'] + Math.min(gepi, TETO_GEPI * VENCIMENTO_BASICO['II-J'])) * 0.01 : 0;
 
     // Pension Calculations
-    let pensionDiscount = 0;
-    let prevcomDiscount = 0;
+    let descontoRPPS = 0;
+    let descontoPrevcom = 0;
 
-    if (isPrevcomMember) {
-        const rppsBase = Math.min(taxableIncome, RGPS_CEILING);
-        pensionDiscount = calculateRPPS(rppsBase);
+    if (prevcom) {
+        const baseRPPS = Math.min(rendaTributavel, TETO_RGPS);
+        descontoRPPS = calcularRPPS(baseRPPS);
 
-        const prevcomBase = Math.max(0, taxableIncome - RGPS_CEILING);
-        prevcomDiscount = prevcomBase * (prevcomContributionPercentage / 100);
+        const prevcomBase = Math.max(0, rendaTributavel - TETO_RGPS);
+        descontoPrevcom = prevcomBase * (percentualDeContribuicaoDaPrevcom / 100);
     } else {
-        pensionDiscount = calculateRPPS(taxableIncome);
+        descontoRPPS = calcularRPPS(rendaTributavel);
     }
 
-    const dependentsDeduction = dependents * DEDUCTION_PER_DEPENDENT;
-    const irCalculationBase = taxableIncome - pensionDiscount - prevcomDiscount - dependentsDeduction;
+    const dependentesDeduction = dependentes * DEDUCAO_POR_DEPENDENTE;
+    const irbaseDeCalculo = rendaTributavel - descontoRPPS - descontoPrevcom - dependentesDeduction;
 
-    const irDiscount = calculateIR(Math.max(0, irCalculationBase));
+    const descontoIR = calcularIR(Math.max(0, irbaseDeCalculo));
 
-    const netSalary = grossSalary - pensionDiscount - prevcomDiscount - irDiscount - sindifiscoDiscount;
+    const salarioLiquido = salarioBruto - descontoRPPS - descontoPrevcom - descontoIR - descontoSindifisco;
 
     return {
-        grossSalary,
-        netSalary,
-        baseSalary,
+        salarioBruto,
+        salarioLiquido,
+        salarioBase,
         gepi,
+        valorPontoGEPI: pontoGEPIAjustado,
         vi,
         ade,
-        pensionDiscount,
-        prevcomDiscount,
-        irDiscount,
-        sindifiscoDiscount,
-        level: effectivePosition,
-        gepiPointValue: adjustedGepiPointValue,
+        descontoRPPS,
+        descontoPrevcom,
+        descontoIR,
+        descontoSindifisco,
+        abateTetoGepi,
+        abateTeto: abateTetoServidorPublico,
+        posicaoCarreira: posicaoEfetiva    
     };
 };
 
 
-export const calculateAnnualProjection = (scenario: Scenario, years: number): AnnualData[] => {
-    const projection: AnnualData[] = [];
-    const currentYear = new Date().getFullYear();
+export const calcularProjecaoAnual = (cenario: Cenario, years: number): dadosAnuais[] => {
+    const projecao: dadosAnuais[] = [];
+    const anoAtual = new Date().getFullYear();
 
     for (let i = 0; i < years; i++) {
-        const yearlyBreakdown = calculateBreakdownForYear(scenario, i);
-        projection.push({
-            year: currentYear + i,
-            ...yearlyBreakdown,
+        const resultadosAnuais = calcularPorAno(cenario, i);
+        projecao.push({
+            ano: anoAtual + i,
+            ...resultadosAnuais,
         });
     }
 
-    return projection;
+    return projecao;
 };

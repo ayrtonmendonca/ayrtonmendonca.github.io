@@ -1,150 +1,157 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { ChartData, Scenario, AnnualData, ScenarioParameters } from '../types';
-import { PROJECTION_YEARS_DEFAULT, SCENARIO_COLORS, CAREER_POSITIONS, BASE_SALARIES, GEPI_POINTS, GEPI_POINT_VALUE, VI_DAILY_VALUE, DEFAULT_PREVCOM_PERCENTAGE } from '../constants';
-import { calculateAnnualProjection } from '../services/remunerationCalculator';
+import { dadosGrafico, Cenario, dadosAnuais, parametrosDeCenario } from '../types';
+import { ANOS_DE_PROJECAO, PALETA_DE_CORES, POSICAO_CARREIRA, VENCIMENTO_BASICO, PONTOS_GEPI, VALOR_PONTO_GEPI, VALOR_DIARIO_VI, PERCENTUAL_PREVCOM_PADRAO, 
+    ANO_INGRESSO_PADRAO, ULTIMA_PROGRESSAO_PADRAO, ULTIMA_PROMOCAO_PADRAO, NIVEL_PADRAO } from '../constants';
+import { calcularProjecaoAnual } from '../services/remunerationCalculator';
 import useLocalStorage from '../hooks/useLocalStorage';
-import ScenarioControls from './ScenarioControls';
+import ControleCenario from './ScenarioControls';
 import RemunerationChart from './RemunerationChart';
 import CalculationDetails from './CalculationDetails';
 import DetailsSelector from './DetailsSelector';
 import Card from './ui/Card';
 
-const ScenarioSimulator: React.FC = () => {
-    const [scenarios, setScenarios] = useLocalStorage<Scenario[]>('sef-mg-scenarios', []);
-    const [projectionYears, setProjectionYears] = useLocalStorage<number>('sef-mg-projection-years', PROJECTION_YEARS_DEFAULT);
-    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-    const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
+const simuladorCenario: React.FC = () => {
+    const [cenarios, defineCenarios] = useLocalStorage<Cenario[]>('sef-mg-cenarios', []);
+    const [anosProjecao, defineAnosProjecao] = useLocalStorage<number>('sef-mg-projection-years', ANOS_DE_PROJECAO);
+    const [anoSelecionado, defineAnoSelecionado] = useState<number>(new Date().getFullYear());
+    const [cenarioSelecionadoID, defineCenarioSelecionadoID] = useState<string | null>(null);
 
     // This effect runs ONCE on mount to sanitize data from localStorage, ensuring compatibility with the current app version.
     useEffect(() => {
-        if (scenarios.length > 0) {
-            let needsUpdate = false;
-            const sanitizedScenarios = scenarios.map(s => {
-                // FIX: Explicitly type `currentParams` to handle cases where `s.parameters` might be missing from old localStorage data,
+        if (cenarios.length > 0) {
+            let precisaAtualizar = false;
+            const cenariosHigienizados = cenarios.map(s => {
+                // FIX: Explicitly type `parametrosAtuais` to handle cases where `s.parametros` might be missing from old localStorage data,
                 // and handle migration from old data structure with `gepiAdjustment`.
-                const currentParams: Partial<ScenarioParameters> & { gepiAdjustment?: number } = s.parameters || {};
+                const parametrosAtuais: Partial<parametrosDeCenario> & { gepiAdjustment?: number } = s.parametros || {};
 
-                const salaryAdjustmentValue = currentParams.salaryAdjustment ?? currentParams.gepiAdjustment ?? 0;
+                const ajusteDeSalarioValue = parametrosAtuais.ajusteDeSalario ?? parametrosAtuais.gepiAdjustment ?? 0;
 
-                const migratedParams: ScenarioParameters = {
-                    level: currentParams.level ?? CAREER_POSITIONS[0],
-                    dependents: currentParams.dependents ?? 0,
-                    workingDays: currentParams.workingDays ?? 20,
-                    salaryAdjustment: salaryAdjustmentValue,
-                    viDailyValue: currentParams.viDailyValue ?? VI_DAILY_VALUE,
-                    gepiPoints: currentParams.gepiPoints ?? GEPI_POINTS,
-                    gepiPointValue: currentParams.gepiPointValue ?? GEPI_POINT_VALUE,
-                    isSindifiscoMember: currentParams.isSindifiscoMember ?? true,
-                    isPrevcomMember: currentParams.isPrevcomMember ?? true,
-                    prevcomContributionPercentage: currentParams.prevcomContributionPercentage ?? DEFAULT_PREVCOM_PERCENTAGE,
-                    baseSalaryOverride: currentParams.baseSalaryOverride ?? BASE_SALARIES[currentParams.level || CAREER_POSITIONS[0]],
+                const parametrosMigrados: parametrosDeCenario = {
+                    posicaoCarreira: parametrosAtuais.posicaoCarreira ?? NIVEL_PADRAO,
+                    dependentes: parametrosAtuais.dependentes ?? 0,
+                    diasTrabalhados: parametrosAtuais.diasTrabalhados ?? 20,
+                    ajusteDeSalario: ajusteDeSalarioValue,
+                    valorVIDiaria: parametrosAtuais.valorVIDiaria ?? VALOR_DIARIO_VI,
+                    pontosGEPI: parametrosAtuais.pontosGEPI ?? PONTOS_GEPI,
+                    valorPontoGEPI: parametrosAtuais.valorPontoGEPI ?? VALOR_PONTO_GEPI,
+                    filiadoAoSindicato: parametrosAtuais.filiadoAoSindicato ?? true,
+                    prevcom: parametrosAtuais.prevcom ?? true,
+                    percentualDeContribuicaoDaPrevcom: parametrosAtuais.percentualDeContribuicaoDaPrevcom ?? PERCENTUAL_PREVCOM_PADRAO,
+                    anoIngresso: parametrosAtuais.anoIngresso,
+                    ultimaPromocao: parametrosAtuais.ultimaPromocao || null,
+                    ultimaProgressao: parametrosAtuais.ultimaProgressao || null,
+                    salarioBaseSobreposto: parametrosAtuais.salarioBaseSobreposto ?? VENCIMENTO_BASICO[parametrosAtuais.posicaoCarreira ?? NIVEL_PADRAO]
                 };
                 
-                if(JSON.stringify(s.parameters) !== JSON.stringify(migratedParams)) {
-                    needsUpdate = true;
+                if(JSON.stringify(s.parametros) !== JSON.stringify(parametrosMigrados)) {
+                    precisaAtualizar = true;
                 }
 
-                return { ...s, parameters: migratedParams };
+                return { ...s, parametros: parametrosMigrados };
             });
 
-            if (needsUpdate) {
-                setScenarios(sanitizedScenarios);
+            if (precisaAtualizar) {
+                defineCenarios(cenariosHigienizados);
             }
         }
     }, []); // <-- IMPORTANT: Empty array means it runs only once on mount.
 
 
     useEffect(() => {
-        if (scenarios.length === 0) {
-            const defaultScenario: Scenario = {
+        if (cenarios.length === 0) {
+            const defaultCenario: Cenario = {
                 id: uuidv4(),
-                name: 'Cenário Atual',
-                color: SCENARIO_COLORS[0],
-                parameters: {
-                    level: CAREER_POSITIONS[0],
-                    dependents: 0,
-                    workingDays: 20,
-                    salaryAdjustment: 0,
-                    viDailyValue: VI_DAILY_VALUE,
-                    baseSalaryOverride: BASE_SALARIES[CAREER_POSITIONS[0]],
-                    gepiPoints: GEPI_POINTS,
-                    gepiPointValue: GEPI_POINT_VALUE,
-                    isSindifiscoMember: true,
-                    isPrevcomMember: true,
-                    prevcomContributionPercentage: DEFAULT_PREVCOM_PERCENTAGE,
+                nome: 'Cenário Atual',
+                cor: PALETA_DE_CORES[0],
+                parametros: {
+                    posicaoCarreira: NIVEL_PADRAO,
+                    dependentes: 0,
+                    diasTrabalhados: 20,
+                    ajusteDeSalario: 0,
+                    valorVIDiaria: VALOR_DIARIO_VI,
+                    pontosGEPI: PONTOS_GEPI,
+                    valorPontoGEPI: VALOR_PONTO_GEPI,
+                    salarioBaseSobreposto: VENCIMENTO_BASICO[NIVEL_PADRAO],
+                    filiadoAoSindicato: true,
+                    prevcom: true,
+                    percentualDeContribuicaoDaPrevcom: PERCENTUAL_PREVCOM_PADRAO,
+                    anoIngresso: ANO_INGRESSO_PADRAO, 
+                    ultimaProgressao: ULTIMA_PROGRESSAO_PADRAO,
+                    ultimaPromocao: ULTIMA_PROMOCAO_PADRAO
                 },
             };
-            setScenarios([defaultScenario]);
-            setSelectedScenarioId(defaultScenario.id);
-        } else if (!selectedScenarioId && scenarios.length > 0) {
-             setSelectedScenarioId(scenarios[0].id);
+            defineCenarios([defaultCenario]);
+            defineCenarioSelecionadoID(defaultCenario.id);
+        } else if (!cenarioSelecionadoID && cenarios.length > 0) {
+             defineCenarioSelecionadoID(cenarios[0].id);
         }
-    }, [scenarios, selectedScenarioId]);
+    }, [cenarios, cenarioSelecionadoID]);
     
-    const projections = useMemo(() => {
-        const result: { [key: string]: AnnualData[] } = {};
-        scenarios.forEach(s => {
-            result[s.id] = calculateAnnualProjection(s, projectionYears);
+    const projecoes = useMemo(() => {
+        const result: { [key: string]: dadosAnuais[] } = {};
+        cenarios.forEach(s => {
+            result[s.id] = calcularProjecaoAnual(s, anosProjecao);
         });
         return result;
-    }, [scenarios, projectionYears]);
+    }, [cenarios, anosProjecao]);
 
-    const chartData: ChartData[] = useMemo(() => {
-        if (scenarios.length === 0 || !projections[scenarios[0].id]) return [];
+    const chartData: dadosGrafico[] = useMemo(() => {
+        if (cenarios.length === 0 || !projecoes[cenarios[0].id]) return [];
 
-        const years = projections[scenarios[0].id].map(p => p.year);
-        return years.map((year, index) => {
-            const dataPoint: ChartData = { year };
-            scenarios.forEach(s => {
-                if (projections[s.id] && projections[s.id][index]) {
-                    dataPoint[s.id] = projections[s.id][index].netSalary;
+        const anos = projecoes[cenarios[0].id].map(p => p.ano);
+        return anos.map((ano, index) => {
+            const dataPoint: dadosGrafico = { ano };
+            cenarios.forEach(s => {
+                if (projecoes[s.id] && projecoes[s.id][index]) {
+                    dataPoint[s.id] = projecoes[s.id][index].salarioLiquido;
                 }
             });
             return dataPoint;
         });
-    }, [projections, scenarios]);
+    }, [projecoes, cenarios]);
 
-    const addScenario = (scenario: Scenario) => {
-        setScenarios(prev => [...prev, scenario]);
+    const addCenario = (cenario: Cenario) => {
+        defineCenarios(prev => [...prev, cenario]);
     };
 
-    const updateScenario = (updatedScenario: Scenario) => {
-        setScenarios(prev => prev.map(s => (s.id === updatedScenario.id ? updatedScenario : s)));
+    const updateCenario = (updatedCenario: Cenario) => {
+        defineCenarios(prev => prev.map(s => (s.id === updatedCenario.id ? updatedCenario : s)));
     };
 
-    const removeScenario = (id: string) => {
-        setScenarios(prev => {
-            const newScenarios = prev.filter(s => s.id !== id);
-             if (selectedScenarioId === id) {
-                setSelectedScenarioId(newScenarios.length > 0 ? newScenarios[0].id : null);
+    const removeCenario = (id: string) => {
+        defineCenarios(prev => {
+            const newCenarios = prev.filter(s => s.id !== id);
+             if (cenarioSelecionadoID === id) {
+                defineCenarioSelecionadoID(newCenarios.length > 0 ? newCenarios[0].id : null);
             }
-            return newScenarios;
+            return newCenarios;
         });
     };
     
     const handleDataPointClick = (year: number) => {
-        setSelectedYear(year);
+        defineAnoSelecionado(year);
         if (chartData.length > 0) {
-            const yearData = chartData.find(d => d.year === year);
-            if (yearData) {
+            const dadosAnuais = chartData.find(d => d.year === year);
+            if (dadosAnuais) {
                 let maxSalary = -1;
-                let bestScenarioId = scenarios[0]?.id;
-                scenarios.forEach(s => {
-                    if (yearData[s.id] > maxSalary) {
-                        maxSalary = yearData[s.id];
-                        bestScenarioId = s.id;
+                let bestCenarioId = cenarios[0]?.id;
+                cenarios.forEach(s => {
+                    if (dadosAnuais[s.id] > maxSalary) {
+                        maxSalary = dadosAnuais[s.id];
+                        bestCenarioId = s.id;
                     }
                 });
-                if (bestScenarioId) {
-                    setSelectedScenarioId(bestScenarioId);
+                if (bestCenarioId) {
+                    defineCenarioSelecionadoID(bestCenarioId);
                 }
             }
         }
     };
 
-    const selectedScenario = scenarios.find(s => s.id === selectedScenarioId);
-    const selectedYearData = selectedYear && selectedScenarioId && projections[selectedScenarioId] ? projections[selectedScenarioId].find(d => d.year === selectedYear) : null;
+    const selectedCenario = cenarios.find(s => s.id === cenarioSelecionadoID);
+    const anoSelecionadoData = anoSelecionado && cenarioSelecionadoID && projecoes[cenarioSelecionadoID] ? projecoes[cenarioSelecionadoID].find(d => d.year === anoSelecionado) : null;
 
 
     return (
@@ -154,19 +161,19 @@ const ScenarioSimulator: React.FC = () => {
                 <span className="block text-xl font-normal text-primary-600 dark:text-primary-400">Auditor Fiscal SEF/MG</span>
             </h1>
 
-            <ScenarioControls
-                scenarios={scenarios}
-                addScenario={addScenario}
-                updateScenario={updateScenario}
-                removeScenario={removeScenario}
-                projectionYears={projectionYears}
-                setProjectionYears={setProjectionYears}
+            <ControleCenario 
+                cenarios={cenarios}
+                addCenario={addCenario}
+                updateCenario={updateCenario}
+                removeCenario={removeCenario}
+                anosProjecao={anosProjecao}
+                defineAnosProjecao={defineAnosProjecao}
             />
 
             <Card>
                  <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">Projeção da Remuneração Líquida Mensal</h2>
-                {scenarios.length > 0 && chartData.length > 0 ? (
-                    <RemunerationChart data={chartData} scenarios={scenarios} onDataPointClick={handleDataPointClick} />
+                {cenarios.length > 0 && chartData.length > 0 ? (
+                    <RemunerationChart data={chartData} cenarios={cenarios} onDataPointClick={handleDataPointClick} />
                 ) : (
                     <div className="h-96 flex items-center justify-center text-gray-500">
                         Adicione um cenário para visualizar o gráfico.
@@ -175,17 +182,17 @@ const ScenarioSimulator: React.FC = () => {
             </Card>
 
             <DetailsSelector
-                scenarios={scenarios}
-                projectionYears={projectionYears}
-                selectedScenarioId={selectedScenarioId}
-                setSelectedScenarioId={setSelectedScenarioId}
-                selectedYear={selectedYear}
-                setSelectedYear={setSelectedYear}
+                cenarios={cenarios}
+                anosProjecao={anosProjecao}
+                cenarioSelecionadoID={cenarioSelecionadoID}
+                defineCenarioSelecionadoID={defineCenarioSelecionadoID}
+                anoSelecionado={anoSelecionado}
+                defineAnoSelecionado={defineAnoSelecionado}
             />
 
-            <CalculationDetails scenario={selectedScenario || null} yearData={selectedYearData || null} year={selectedYear} />
+            <CalculationDetails cenario={selectedCenario || null} dadosAnuais={anoSelecionadoData || null} year={anoSelecionado} />
         </div>
     );
 };
 
-export default ScenarioSimulator;
+export default simuladorCenario;

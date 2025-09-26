@@ -1,46 +1,50 @@
-export interface ScenarioParameters {
-    level: string;
-    dependents: number;
-    workingDays: number;
-    salaryAdjustment: number;
-    viDailyValue: number;
-    baseSalaryOverride: number;
-    gepiPoints: number;
-    gepiPointValue: number;
-    isSindifiscoMember: boolean;
-    isPrevcomMember: boolean;
-    prevcomContributionPercentage: number;
+export interface parametrosDeCenario {
+    posicaoCarreira: string;
+    dependentes: number;
+    diasTrabalhados: number;
+    ajusteDeSalario: number;
+    valorVIDiaria: number;
+    salarioBaseSobreposto: number;
+    pontosGEPI: number;
+    valorPontoGEPI: number;
+    filiadoAoSindicato: boolean;
+    prevcom: boolean;
+    percentualDeContribuicaoDaPrevcom: number;
+    anoIngresso: number;
+    ultimaPromocao: number;
+    ultimaProgressao: number;
 }
 
-export interface Scenario {
+export interface Cenario {
     id: string;
-    name: string;
-    color: string;
-    parameters: ScenarioParameters;
+    nome: string;
+    cor: string;
+    parametros: parametrosDeCenario;
 }
 
-export interface MonthlyBreakdown {
-    grossSalary: number;
-    netSalary: number;
-
-    baseSalary: number;
+export interface detalhamentoMensal {
+    salarioBruto: number;
+    salarioLiquido: number;
+    salarioBase: number;
     gepi: number;
-    gepiPointValue: number;
+    valorPontoGEPI: number;
     vi: number;
     ade: number;
-    pensionDiscount: number; // RPPS
-    prevcomDiscount: number; // Complementary
-    irDiscount: number;
-    sindifiscoDiscount: number;
-    level: string;
+    descontoRPPS: number; // RPPS
+    descontoPrevcom: number; // Complementary
+    descontoIR: number;
+    descontoSindifisco: number;
+    abateTetoGepi: number;
+    abateTeto: number;
+    posicaoCarreira: string;
 }
 
-export interface AnnualData extends MonthlyBreakdown {
-    year: number;
-    netSalary: number;
+export interface dadosAnuais extends detalhamentoMensal {
+    ano: number;
+    salarioLiquido: number;
 }
 
-export interface ChartData {
-    year: number;
-    [key: string]: number; // Scenario IDs map to their net salary
+export interface dadosGrafico {
+    ano: number;
+    [key: string]: number; // Cenario IDs map to their net salary
 }

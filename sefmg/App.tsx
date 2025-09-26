@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import Header from './components/Header';
-import ScenarioSimulator from './components/ScenarioSimulator';
+import SimuladorCenario from './components/ScenarioSimulator';
 import { useTheme } from './hooks/useTheme';
 
 const About = () => (
@@ -33,13 +33,13 @@ export default function App() {
     const renderContent = () => {
         switch (activeTab) {
             case 'home':
-                return <ScenarioSimulator />;
+                return <SimuladorCenario />;
             case 'legislation':
                 return <Legislation />;
             case 'about':
                 return <About />;
             default:
-                return <ScenarioSimulator />;
+                return <SimuladorCenario />;
         }
     };
 
