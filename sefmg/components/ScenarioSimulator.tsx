@@ -13,7 +13,7 @@ import Card from './ui/Card';
 
 const simuladorCenario: React.FC = () => {
     const [cenarios, defineCenarios] = useLocalStorage<Cenario[]>('sef-mg-cenarios', []);
-    const [anosProjecao, defineAnosProjecao] = useLocalStorage<number>('sef-mg-projection-years', ANOS_DE_PROJECAO);
+    const [anosProjecao, defineAnosProjecao] = useLocalStorage<number>('sef-mg-anos-projecao', ANOS_DE_PROJECAO);
     const [anoSelecionado, defineAnoSelecionado] = useState<number>(new Date().getFullYear());
     const [cenarioSelecionadoID, defineCenarioSelecionadoID] = useState<string | null>(null);
 
@@ -49,6 +49,8 @@ const simuladorCenario: React.FC = () => {
                     precisaAtualizar = true;
                 }
 
+                console.log(parametrosMigrados);
+
                 return { ...s, parametros: parametrosMigrados };
             });
 
@@ -61,7 +63,7 @@ const simuladorCenario: React.FC = () => {
 
     useEffect(() => {
         if (cenarios.length === 0) {
-            const defaultCenario: Cenario = {
+            const cenarioPadrao: Cenario = {
                 id: uuidv4(),
                 nome: 'Cenário Atual',
                 cor: PALETA_DE_CORES[0],
@@ -82,8 +84,8 @@ const simuladorCenario: React.FC = () => {
                     ultimaPromocao: ULTIMA_PROMOCAO_PADRAO
                 },
             };
-            defineCenarios([defaultCenario]);
-            defineCenarioSelecionadoID(defaultCenario.id);
+            defineCenarios([cenarioPadrao]);
+            defineCenarioSelecionadoID(cenarioPadrao.id);
         } else if (!cenarioSelecionadoID && cenarios.length > 0) {
              defineCenarioSelecionadoID(cenarios[0].id);
         }
@@ -112,12 +114,12 @@ const simuladorCenario: React.FC = () => {
         });
     }, [projecoes, cenarios]);
 
-    const addCenario = (cenario: Cenario) => {
+    const adicionarCenario = (cenario: Cenario) => {
         defineCenarios(prev => [...prev, cenario]);
     };
 
-    const updateCenario = (updatedCenario: Cenario) => {
-        defineCenarios(prev => prev.map(s => (s.id === updatedCenario.id ? updatedCenario : s)));
+    const atualizarCenario = (cenarioAtualizado: Cenario) => {
+        defineCenarios(prev => prev.map(s => (s.id === cenarioAtualizado.id ? cenarioAtualizado : s)));
     };
 
     const removeCenario = (id: string) => {
@@ -163,8 +165,8 @@ const simuladorCenario: React.FC = () => {
 
             <ControleCenario 
                 cenarios={cenarios}
-                addCenario={addCenario}
-                updateCenario={updateCenario}
+                adicionarCenario={adicionarCenario}
+                atualizarCenario={atualizarCenario}
                 removeCenario={removeCenario}
                 anosProjecao={anosProjecao}
                 defineAnosProjecao={defineAnosProjecao}

@@ -9,8 +9,8 @@ import Select from './ui/Select';
 
 interface propriedadesControleCenario {
     cenarios: Cenario[];
-    addCenario: (cenario: Cenario) => void;
-    updateCenario: (cenario: Cenario) => void;
+    adicionarCenario: (cenario: Cenario) => void;
+    atualizarCenario: (cenario: Cenario) => void;
     removeCenario: (id: string) => void;
     anosProjecao: number;
     defineAnosProjecao: (years: number) => void;
@@ -21,7 +21,7 @@ const formatPositionName = (position: string) => {
     return `Nível ${nivel} - Grau ${grau}`;
 };
 
-const ControleCenario : React.FC<propriedadesControleCenario> = ({ cenarios, addCenario, updateCenario, removeCenario, anosProjecao, defineAnosProjecao }) => {
+const ControleCenario : React.FC<propriedadesControleCenario> = ({ cenarios, adicionarCenario, atualizarCenario, removeCenario, anosProjecao, defineAnosProjecao }) => {
     const [estaEditando, defineEstaEditando] = useState<string | null>(null);
     const [parametrosAtuais, defineParametrosAtuais] = useState<parametrosDeCenario>({
         posicaoCarreira: NIVEL_PADRAO,
@@ -53,10 +53,10 @@ const ControleCenario : React.FC<propriedadesControleCenario> = ({ cenarios, add
         if (estaEditando) {
             const cenarioToUpdate = cenarios.find(s => s.id === estaEditando);
             if(cenarioToUpdate) {
-                updateCenario({ ...cenarioToUpdate, name: nomeCenario, parametros: parametrosAtuais });
+                atualizarCenario({ ...cenarioToUpdate, name: nomeCenario, parametros: parametrosAtuais });
             }
         } else {
-            addCenario({
+            adicionarCenario({
                 id: uuidv4(),
                 nome: nomeCenario,
                 cor: calculaProximaCor(),
