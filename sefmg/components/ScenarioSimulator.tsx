@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { ChartData, Scenario, AnnualData } from '../types';
+import { ChartData, Scenario, AnnualData, ScenarioParameters } from '../types';
 import { PROJECTION_YEARS_DEFAULT, SCENARIO_COLORS, CAREER_POSITIONS, BASE_SALARIES, GEPI_POINTS, GEPI_POINT_VALUE, VI_DAILY_VALUE, DEFAULT_PREVCOM_PERCENTAGE } from '../constants';
 import { calculateAnnualProjection } from '../services/remunerationCalculator';
 import useLocalStorage from '../hooks/useLocalStorage';
@@ -15,6 +15,42 @@ const ScenarioSimulator: React.FC = () => {
     const [projectionYears, setProjectionYears] = useLocalStorage<number>('sef-mg-projection-years', PROJECTION_YEARS_DEFAULT);
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
+
+    // This effect runs ONCE on mount to sanitize data from localStorage, ensuring compatibility with the current app version.
+    useEffect(() => {
+        if (scenarios.length > 0) {
+            let needsUpdate = false;
+            const sanitizedScenarios = scenarios.map(s => {
+                // FIX: Explicitly type `currentParams` to handle cases where `s.parameters` might be missing from old localStorage data.
+                const currentParams: Partial<ScenarioParameters> = s.parameters || {};
+                const migratedParams: ScenarioParameters = {
+                    level: currentParams.level ?? CAREER_POSITIONS[0],
+                    dependents: currentParams.dependents ?? 0,
+                    workingDays: currentParams.workingDays ?? 20,
+                    salaryAdjustment: currentParams.salaryAdjustment ?? 0,
+                    viDailyValue: currentParams.viDailyValue ?? VI_DAILY_VALUE,
+                    gepiPoints: currentParams.gepiPoints ?? GEPI_POINTS,
+                    gepiPointValue: currentParams.gepiPointValue ?? GEPI_POINT_VALUE,
+                    gepiAdjustment: currentParams.gepiAdjustment ?? 0,
+                    isSindifiscoMember: currentParams.isSindifiscoMember ?? true,
+                    isPrevcomMember: currentParams.isPrevcomMember ?? true,
+                    prevcomContributionPercentage: currentParams.prevcomContributionPercentage ?? DEFAULT_PREVCOM_PERCENTAGE,
+                    baseSalaryOverride: currentParams.baseSalaryOverride ?? BASE_SALARIES[currentParams.level || CAREER_POSITIONS[0]],
+                };
+                
+                if(JSON.stringify(currentParams) !== JSON.stringify(migratedParams)) {
+                    needsUpdate = true;
+                }
+
+                return { ...s, parameters: migratedParams };
+            });
+
+            if (needsUpdate) {
+                setScenarios(sanitizedScenarios);
+            }
+        }
+    }, []); // <-- IMPORTANT: Empty array means it runs only once on mount.
+
 
     useEffect(() => {
         if (scenarios.length === 0) {
@@ -42,7 +78,7 @@ const ScenarioSimulator: React.FC = () => {
         } else if (!selectedScenarioId && scenarios.length > 0) {
              setSelectedScenarioId(scenarios[0].id);
         }
-    }, [scenarios, selectedScenarioId, setScenarios]);
+    }, [scenarios, selectedScenarioId]);
     
     const projections = useMemo(() => {
         const result: { [key: string]: AnnualData[] } = {};

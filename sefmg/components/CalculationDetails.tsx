@@ -1,7 +1,6 @@
 import React from 'react';
 import { AnnualData, Scenario } from '../types';
 import Card from './ui/Card';
-import { GEPI_POINTS, VI_DAILY_VALUE } from '../constants';
 
 interface CalculationDetailsProps {
     scenario: Scenario | null;
@@ -34,11 +33,11 @@ const CalculationDetails: React.FC<CalculationDetailsProps> = ({ scenario, yearD
         );
     }
     
-    // Provide defaults for parameters that may be missing from older scenarios in localStorage
+    // Parameters are now guaranteed to exist due to sanitization on app load.
     const {
-        gepiPoints = GEPI_POINTS,
-        workingDays = 20, // Default based on form initializer
-        viDailyValue = VI_DAILY_VALUE,
+        gepiPoints,
+        workingDays,
+        viDailyValue,
     } = scenario.parameters;
 
     const gepiLabel = `GEPI (${gepiPoints.toLocaleString('pt-BR')} pts x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(yearData.gepiPointValue)})`;
