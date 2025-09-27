@@ -18,7 +18,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemCount, onNavigate }) => {
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4 py-2 flex justify-between items-center">
         <div className="cursor-pointer" onClick={() => onNavigate('home')}>
-            <img src="https://i.imgur.com/Jg8aF8D.png" alt="Resistex Logo" className="h-14" />
+            <img src="./images/logo_empresa.jpg" alt="Resistex Logo" className="h-14" />
         </div>
         <nav className="hidden md:flex items-center space-x-6">
           <button onClick={() => onNavigate('home')} className="text-gray-600 hover:text-theme-red transition duration-300 font-medium">Home</button>
