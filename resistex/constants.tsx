@@ -31,7 +31,7 @@ export const PRODUCTS: Product[] = [
     description: 'Fácil, prático e seguro, acenda sua churrasqueira sem se preocupar..',
     price: 139.90,
     image: './images/acendedor.jpg',
-    brand: 'Acendedor',
+    brand: 'Resistex',
   }
 ];
 
