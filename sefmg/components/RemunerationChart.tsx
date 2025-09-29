@@ -3,14 +3,14 @@ import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { dadosGrafico, Cenario } from '../types';
 
-interface RemunerationChartProps {
+interface GraficoRemuneracaoPropriedades {
     data: dadosGrafico[];
     cenarios: Cenario[];
     onDataPointClick: (year: number) => void;
 }
 
-const RemunerationChart: React.FC<RemunerationChartProps> = ({ data, cenarios, onDataPointClick }) => {
-    
+const GraficoRemuneracao: React.FC<GraficoRemuneracaoPropriedades> = ({ data, cenarios, onDataPointClick }) => {
+   
     const CustomTooltip: React.FC<any> = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
             return (
@@ -18,7 +18,7 @@ const RemunerationChart: React.FC<RemunerationChartProps> = ({ data, cenarios, o
                     <p className="font-bold">{`Ano: ${label}`}</p>
                     {payload.map((pld: any) => (
                         <div key={pld.dataKey} style={{ color: pld.color }}>
-                            {`${pld.name}: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pld.value)}`}
+                            {`${pld.nome}: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pld.value)}`}
                         </div>
                     ))}
                 </div>
@@ -56,4 +56,4 @@ const RemunerationChart: React.FC<RemunerationChartProps> = ({ data, cenarios, o
     );
 };
 
-export default RemunerationChart;
+export default GraficoRemuneracao;

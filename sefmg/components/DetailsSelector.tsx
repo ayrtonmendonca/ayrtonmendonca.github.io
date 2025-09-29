@@ -20,8 +20,8 @@ const DetailsSelector: React.FC<DetailsSelectorProps> = ({
     anoSelecionado,
     defineAnoSelecionado,
 }) => {
-    const startYear = new Date().getFullYear();
-    const availableYears = Array.from({ length: anosProjecao }, (_, i) => startYear + i);
+    const anoInicio = new Date().getFullYear();
+    const anosDIsponiveis = Array.from({ length: anosProjecao }, (_, i) => anoInicio + i);
 
     return (
         <Card>
@@ -37,7 +37,7 @@ const DetailsSelector: React.FC<DetailsSelectorProps> = ({
                 >
                     {cenarios.map((s) => (
                         <option key={s.id} value={s.id}>
-                            {s.name}
+                            {s.nome}
                         </option>
                     ))}
                 </Select>
@@ -48,7 +48,7 @@ const DetailsSelector: React.FC<DetailsSelectorProps> = ({
                     onChange={(e) => defineAnoSelecionado(parseInt(e.target.value))}
                     aria-label="Selecionar ano para detalhes"
                 >
-                    {availableYears.map((year) => (
+                    {anosDIsponiveis.map((year) => (
                         <option key={year} value={year}>
                             {year}
                         </option>

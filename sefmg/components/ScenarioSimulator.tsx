@@ -6,7 +6,7 @@ import { ANOS_DE_PROJECAO, PALETA_DE_CORES, POSICAO_CARREIRA, VENCIMENTO_BASICO,
 import { calcularProjecaoAnual } from '../services/remunerationCalculator';
 import useLocalStorage from '../hooks/useLocalStorage';
 import ControleCenario from './ScenarioControls';
-import RemunerationChart from './RemunerationChart';
+import GraficoRemuneracao from './RemunerationChart';
 import CalculationDetails from './CalculationDetails';
 import DetailsSelector from './DetailsSelector';
 import Card from './ui/Card';
@@ -42,7 +42,7 @@ const simuladorCenario: React.FC = () => {
                     anoIngresso: parametrosAtuais.anoIngresso,
                     ultimaPromocao: parametrosAtuais.ultimaPromocao || null,
                     ultimaProgressao: parametrosAtuais.ultimaProgressao || null,
-                    salarioBaseSobreposto: parametrosAtuais.salarioBaseSobreposto ?? VENCIMENTO_BASICO[parametrosAtuais.posicaoCarreira ?? NIVEL_PADRAO]
+                    salarioBaseSobreposto: parametrosAtuais.salarioBaseSobreposto ?? VENCIMENTO_BASICO.calcularVB(parametrosAtuais.posicaoCarreira ?? NIVEL_PADRAO)
                 };
                 
                 if(JSON.stringify(s.parametros) !== JSON.stringify(parametrosMigrados)) {
@@ -75,7 +75,7 @@ const simuladorCenario: React.FC = () => {
                     valorVIDiaria: VALOR_DIARIO_VI,
                     pontosGEPI: PONTOS_GEPI,
                     valorPontoGEPI: VALOR_PONTO_GEPI,
-                    salarioBaseSobreposto: VENCIMENTO_BASICO[NIVEL_PADRAO],
+                    salarioBaseSobreposto: VENCIMENTO_BASICO.calcularVB(NIVEL_PADRAO),
                     filiadoAoSindicato: true,
                     prevcom: true,
                     percentualDeContribuicaoDaPrevcom: PERCENTUAL_PREVCOM_PADRAO,
@@ -92,14 +92,15 @@ const simuladorCenario: React.FC = () => {
     }, [cenarios, cenarioSelecionadoID]);
     
     const projecoes = useMemo(() => {
-        const result: { [key: string]: dadosAnuais[] } = {};
+        const resultados: { [key: string]: dadosAnuais[] } = {};
         cenarios.forEach(s => {
-            result[s.id] = calcularProjecaoAnual(s, anosProjecao);
+            resultados[s.id] = calcularProjecaoAnual(s, anosProjecao);
         });
-        return result;
+        return resultados;
     }, [cenarios, anosProjecao]);
 
-    const chartData: dadosGrafico[] = useMemo(() => {
+
+    const dadosGrafico: dadosGrafico[] = useMemo(() => {
         if (cenarios.length === 0 || !projecoes[cenarios[0].id]) return [];
 
         const anos = projecoes[cenarios[0].id].map(p => p.ano);
@@ -134,8 +135,8 @@ const simuladorCenario: React.FC = () => {
     
     const handleDataPointClick = (year: number) => {
         defineAnoSelecionado(year);
-        if (chartData.length > 0) {
-            const dadosAnuais = chartData.find(d => d.year === year);
+        if (dadosGrafico.length > 0) {
+            const dadosAnuais = dadosGrafico.find(d => d.year === year);
             if (dadosAnuais) {
                 let maxSalary = -1;
                 let bestCenarioId = cenarios[0]?.id;
@@ -152,7 +153,7 @@ const simuladorCenario: React.FC = () => {
         }
     };
 
-    const selectedCenario = cenarios.find(s => s.id === cenarioSelecionadoID);
+    const cenarioSelecionado = cenarios.find(s => s.id === cenarioSelecionadoID);
     const anoSelecionadoData = anoSelecionado && cenarioSelecionadoID && projecoes[cenarioSelecionadoID] ? projecoes[cenarioSelecionadoID].find(d => d.year === anoSelecionado) : null;
 
 
@@ -174,8 +175,8 @@ const simuladorCenario: React.FC = () => {
 
             <Card>
                  <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">Projeção da Remuneração Líquida Mensal</h2>
-                {cenarios.length > 0 && chartData.length > 0 ? (
-                    <RemunerationChart data={chartData} cenarios={cenarios} onDataPointClick={handleDataPointClick} />
+                {cenarios.length > 0 && dadosGrafico.length > 0 ? (
+                    <GraficoRemuneracao data={dadosGrafico} cenarios={cenarios} onDataPointClick={handleDataPointClick} />
                 ) : (
                     <div className="h-96 flex items-center justify-center text-gray-500">
                         Adicione um cenário para visualizar o gráfico.
@@ -192,7 +193,7 @@ const simuladorCenario: React.FC = () => {
                 defineAnoSelecionado={defineAnoSelecionado}
             />
 
-            <CalculationDetails cenario={selectedCenario || null} dadosAnuais={anoSelecionadoData || null} year={anoSelecionado} />
+            <CalculationDetails cenario={cenarioSelecionado || null} dadosAnuais={anoSelecionadoData || null} year={anoSelecionado} />
         </div>
     );
 };

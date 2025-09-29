@@ -16,7 +16,7 @@ interface propriedadesControleCenario {
     defineAnosProjecao: (years: number) => void;
 }
 
-const formatPositionName = (position: string) => {
+const formatarNomePosicao = (position: string) => {
     const [nivel, grau] = position.split('-');
     return `Nível ${nivel} - Grau ${grau}`;
 };
@@ -29,7 +29,7 @@ const ControleCenario : React.FC<propriedadesControleCenario> = ({ cenarios, adi
         diasTrabalhados: 20,
         ajusteDeSalario: 0,
         valorVIDiaria: VALOR_DIARIO_VI,
-        salarioBaseSobreposto: VENCIMENTO_BASICO[NIVEL_PADRAO],
+        salarioBaseSobreposto: VENCIMENTO_BASICO.calcularVB(NIVEL_PADRAO),
         pontosGEPI: PONTOS_GEPI,
         valorPontoGEPI: VALOR_PONTO_GEPI,
         filiadoAoSindicato: true,
@@ -49,7 +49,7 @@ const ControleCenario : React.FC<propriedadesControleCenario> = ({ cenarios, adi
     }, [cenarios.length, estaEditando]);
 
 
-    const handleSave = () => {
+    const gerenciarSalvamento = () => {
         if (estaEditando) {
             const cenarioToUpdate = cenarios.find(s => s.id === estaEditando);
             if(cenarioToUpdate) {
@@ -63,10 +63,10 @@ const ControleCenario : React.FC<propriedadesControleCenario> = ({ cenarios, adi
                 parametros: parametrosAtuais,
             });
         }
-        resetForm();
+        reiniciarFormulario();
     };
 
-    const resetForm = () => {
+    const reiniciarFormulario = () => {
         defineEstaEditando(null);
         defineNomeCenario('');
         defineParametrosAtuais({
@@ -75,7 +75,7 @@ const ControleCenario : React.FC<propriedadesControleCenario> = ({ cenarios, adi
             diasTrabalhados: 20,
             ajusteDeSalario: 0,
             valorVIDiaria: VALOR_DIARIO_VI,
-            salarioBaseSobreposto: VENCIMENTO_BASICO[NIVEL_PADRAO],
+            salarioBaseSobreposto: VENCIMENTO_BASICO.calcularVB(NIVEL_PADRAO),
             pontosGEPI: PONTOS_GEPI,
             valorPontoGEPI: VALOR_PONTO_GEPI,
             filiadoAoSindicato: true,
@@ -84,17 +84,15 @@ const ControleCenario : React.FC<propriedadesControleCenario> = ({ cenarios, adi
         });
     };
 
-    const handleEdit = (cenario: Cenario) => {
+    const gerenciarEdicao = (cenario: Cenario) => {
         defineEstaEditando(cenario.id);
         defineNomeCenario(cenario.nome);
         defineParametrosAtuais(cenario.parametros);
     };
 
-    const handleCancelEdit = () => {
-        resetForm();
+    const gerenciarCancelamentoEdicao = () => {
+        reiniciarFormulario();
     };
-
-    console.log(parametrosAtuais);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -107,10 +105,10 @@ const ControleCenario : React.FC<propriedadesControleCenario> = ({ cenarios, adi
                         defineParametrosAtuais(p => ({
                             ...p,
                             posicaoCarreira: novaPosicaoCarreira,
-                            salarioBaseSobreposto: VENCIMENTO_BASICO[novaPosicaoCarreira] || 0
+                            salarioBaseSobreposto: VENCIMENTO_BASICO.calcularVB(novaPosicaoCarreira) || 0
                         }));
                     }}>
-                        {POSICAO_CARREIRA.map(position => <option key={position} value={position}>{formatPositionName(position)}</option>)}
+                        {POSICAO_CARREIRA.map(position => <option key={position} value={position}>{formatarNomePosicao(position)}</option>)}
                     </Select>
                     <Input label="Vencimento Básico (R$)" id="salarioBaseSobreposto" type="number" step="0.01" value={parametrosAtuais.salarioBaseSobreposto} onChange={(e) => defineParametrosAtuais(p => ({ ...p, salarioBaseSobreposto: parseFloat(e.target.value) || 0 }))} />
                     <Input label="Pontos GEPI" id="pontosGEPI" type="number" value={parametrosAtuais.pontosGEPI} onChange={(e) => defineParametrosAtuais(p => ({ ...p, pontosGEPI: parseFloat(e.target.value) || 0 }))} />
@@ -152,12 +150,12 @@ const ControleCenario : React.FC<propriedadesControleCenario> = ({ cenarios, adi
                             className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                         />
                         <label htmlFor="filiadoAoSindicato" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Filiado ao SINDIFISCO (desconto 1%)
+                            Filiado ao SINDIFISCO
                         </label>
                     </div>
                     <div className="flex space-x-2">
-                        <Button onClick={handleSave}>{estaEditando ? 'Salvar Alterações' : 'Adicionar Cenário'}</Button>
-                        {estaEditando && <Button variant="secondary" onClick={handleCancelEdit}>Cancelar</Button>}
+                        <Button onClick={gerenciarSalvamento}>{estaEditando ? 'Salvar Alterações' : 'Adicionar Cenário'}</Button>
+                        {estaEditando && <Button variant="secondary" onClick={gerenciarCancelamentoEdicao}>Cancelar</Button>}
                     </div>
                 </div>
             </Card>
@@ -174,10 +172,10 @@ const ControleCenario : React.FC<propriedadesControleCenario> = ({ cenarios, adi
                         <li key={s.id} className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
                             <div className="flex items-center">
                                 <span className="w-4 h-4 rounded-full mr-3" style={{ backgroundColor: s.cor }}></span>
-                                <span className="font-semibold">{s.name}</span>
+                                <span className="font-semibold">{s.nome}</span>
                             </div>
                             <div className="space-x-2">
-                                <Button onClick={() => handleEdit(s)} className="px-2 py-1 text-xs">Editar</Button>
+                                <Button onClick={() => gerenciarEdicao(s)} className="px-2 py-1 text-xs">Editar</Button>
                                 {cenarios.length > 1 && <Button variant="danger" onClick={() => removeCenario(s.id)} className="px-2 py-1 text-xs">Remover</Button>}
                             </div>
                         </li>

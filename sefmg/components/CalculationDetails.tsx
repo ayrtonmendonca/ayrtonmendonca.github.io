@@ -17,7 +17,7 @@ const DetailRow: React.FC<{ label: string; value: number; isTotal?: boolean; isN
     </div>
 );
 
-const formatPositionName = (position: string) => {
+const formatarNomePosicao = (position: string) => {
     if (!position || !position.includes('-')) return position;
     const [nivel, grau] = position.split('-');
     return `Nível ${nivel} - Grau ${grau}`;
@@ -46,13 +46,13 @@ const CalculationDetails: React.FC<CalculationDetailsProps> = ({ cenario, dadosA
     return (
         <Card>
             <h3 className="text-xl font-bold mb-4">
-                Detalhamento do Cálculo: <span style={{ color: cenario.cor }}>{cenario.name}</span> - Ano {year}
+                Detalhamento do Cálculo: <span style={{ color: cenario.cor }}>{cenario.nome}</span> - Ano {year}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                     <h4 className="font-semibold text-lg mb-2 text-gray-700 dark:text-gray-300">Remuneração Mensal</h4>
-                    <DetailRow label={`Vencimento Básico (${formatPositionName(dadosAnuais.posicaoCarreira)})`} value={dadosAnuais.salarioBase} />
+                    <DetailRow label={`Vencimento Básico (${formatarNomePosicao(dadosAnuais.posicaoCarreira)})`} value={dadosAnuais.salarioBase} />
                     {dadosAnuais.ade > 0 && <DetailRow label="Adicional de Desempenho (ADE)" value={dadosAnuais.ade} />}
                     <DetailRow label={gepiLabel} value={dadosAnuais.gepi} />
                     <DetailRow label={viLabel} value={dadosAnuais.vi} />
