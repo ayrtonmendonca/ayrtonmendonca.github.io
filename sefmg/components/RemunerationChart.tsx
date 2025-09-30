@@ -6,21 +6,24 @@ import { dadosGrafico, Cenario } from '../types';
 interface GraficoRemuneracaoPropriedades {
     data: dadosGrafico[];
     cenarios: Cenario[];
-    onDataPointClick: (year: number) => void;
+    onDataPointClick: (ano: number) => void;
 }
 
 const GraficoRemuneracao: React.FC<GraficoRemuneracaoPropriedades> = ({ data, cenarios, onDataPointClick }) => {
+
+    // console.log(data, cenarios, onDataPointClick);
    
     const CustomTooltip: React.FC<any> = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
             return (
                 <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg">
                     <p className="font-bold">{`Ano: ${label}`}</p>
-                    {payload.map((pld: any) => (
+                    {payload.map((pld: any) => {
+                    return (
                         <div key={pld.dataKey} style={{ color: pld.color }}>
-                            {`${pld.nome}: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pld.value)}`}
+                            {`${pld.name}: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pld.value)}`}
                         </div>
-                    ))}
+                    )})}
                 </div>
             );
         }
@@ -35,7 +38,7 @@ const GraficoRemuneracao: React.FC<GraficoRemuneracaoPropriedades> = ({ data, ce
                 onClick={(e) => e && e.activeLabel && onDataPointClick(Number(e.activeLabel))}
             >
                 <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                <XAxis dataKey="year" />
+                <XAxis dataKey="ano" />
                 <YAxis tickFormatter={(value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact' }).format(value as number)} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />

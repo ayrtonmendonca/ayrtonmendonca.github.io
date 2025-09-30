@@ -1,14 +1,18 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { dadosGrafico, Cenario, dadosAnuais, parametrosDeCenario } from '../types';
-import { ANOS_DE_PROJECAO, PALETA_DE_CORES, POSICAO_CARREIRA, VENCIMENTO_BASICO, PONTOS_GEPI, VALOR_PONTO_GEPI, VALOR_DIARIO_VI, PERCENTUAL_PREVCOM_PADRAO, 
-    ANO_INGRESSO_PADRAO, ULTIMA_PROGRESSAO_PADRAO, ULTIMA_PROMOCAO_PADRAO, NIVEL_PADRAO } from '../constants';
+import {
+    ANOS_DE_PROJECAO, PALETA_DE_CORES, POSICAO_CARREIRA, VENCIMENTO_BASICO, PONTOS_GEPI, VALOR_PONTO_GEPI, VALOR_DIARIO_VI, PERCENTUAL_PREVCOM_PADRAO,
+    ANO_INGRESSO_PADRAO, ULTIMA_PROGRESSAO_PADRAO, ULTIMA_PROMOCAO_PADRAO, NIVEL_PADRAO,
+    TETO_SERVIDOR_PUBLICO,
+    TETO_GEPI
+} from '../constants';
 import { calcularProjecaoAnual } from '../services/remunerationCalculator';
 import useLocalStorage from '../hooks/useLocalStorage';
 import ControleCenario from './ScenarioControls';
 import GraficoRemuneracao from './RemunerationChart';
-import CalculationDetails from './CalculationDetails';
-import DetailsSelector from './DetailsSelector';
+import DetalhesCalculo from './CalculationDetails';
+import SelecionadorDetalhes from './DetailsSelector';
 import Card from './ui/Card';
 
 const simuladorCenario: React.FC = () => {
@@ -22,34 +26,36 @@ const simuladorCenario: React.FC = () => {
         if (cenarios.length > 0) {
             let precisaAtualizar = false;
             const cenariosHigienizados = cenarios.map(s => {
-                // FIX: Explicitly type `parametrosAtuais` to handle cases where `s.parametros` might be missing from old localStorage data,
+                // FIX: Explicitly type `parametrosCenarioAtuais` to handle cases where `s.parametros` might be missing from old localStorage data,
                 // and handle migration from old data structure with `gepiAdjustment`.
-                const parametrosAtuais: Partial<parametrosDeCenario> & { gepiAdjustment?: number } = s.parametros || {};
+                const parametrosCenarioAtuais: Partial<parametrosDeCenario> & { gepiAdjustment?: number } = s.parametros || {};
 
-                const ajusteDeSalarioValue = parametrosAtuais.ajusteDeSalario ?? parametrosAtuais.gepiAdjustment ?? 0;
 
                 const parametrosMigrados: parametrosDeCenario = {
-                    posicaoCarreira: parametrosAtuais.posicaoCarreira ?? NIVEL_PADRAO,
-                    dependentes: parametrosAtuais.dependentes ?? 0,
-                    diasTrabalhados: parametrosAtuais.diasTrabalhados ?? 20,
-                    ajusteDeSalario: ajusteDeSalarioValue,
-                    valorVIDiaria: parametrosAtuais.valorVIDiaria ?? VALOR_DIARIO_VI,
-                    pontosGEPI: parametrosAtuais.pontosGEPI ?? PONTOS_GEPI,
-                    valorPontoGEPI: parametrosAtuais.valorPontoGEPI ?? VALOR_PONTO_GEPI,
-                    filiadoAoSindicato: parametrosAtuais.filiadoAoSindicato ?? true,
-                    prevcom: parametrosAtuais.prevcom ?? true,
-                    percentualDeContribuicaoDaPrevcom: parametrosAtuais.percentualDeContribuicaoDaPrevcom ?? PERCENTUAL_PREVCOM_PADRAO,
-                    anoIngresso: parametrosAtuais.anoIngresso,
-                    ultimaPromocao: parametrosAtuais.ultimaPromocao || null,
-                    ultimaProgressao: parametrosAtuais.ultimaProgressao || null,
-                    salarioBaseSobreposto: parametrosAtuais.salarioBaseSobreposto ?? VENCIMENTO_BASICO.calcularVB(parametrosAtuais.posicaoCarreira ?? NIVEL_PADRAO)
+                    posicaoCarreira: parametrosCenarioAtuais.posicaoCarreira ?? NIVEL_PADRAO,
+                    dependentes: parametrosCenarioAtuais.dependentes ?? 0,
+                    diasTrabalhados: parametrosCenarioAtuais.diasTrabalhados ?? 20,
+                    RGAMedio: parametrosCenarioAtuais.RGAMedio ?? 0,
+                    crescimentoGEPIMedio: parametrosCenarioAtuais.crescimentoGEPIMedio ?? 0,
+                    tetoGEPI: parametrosCenarioAtuais.tetoGEPI ?? TETO_GEPI,
+                    tetoServidorPublico: parametrosCenarioAtuais.tetoServidorPublico ?? TETO_SERVIDOR_PUBLICO,
+                    valorVIDiaria: parametrosCenarioAtuais.valorVIDiaria ?? VALOR_DIARIO_VI,
+                    pontosGEPI: parametrosCenarioAtuais.pontosGEPI ?? PONTOS_GEPI,
+                    valorPontoGEPI: parametrosCenarioAtuais.valorPontoGEPI ?? VALOR_PONTO_GEPI,
+                    filiadoAoSindicato: parametrosCenarioAtuais.filiadoAoSindicato ?? true,
+                    prevcom: parametrosCenarioAtuais.prevcom ?? true,
+                    percentualDeContribuicaoDaPrevcom: parametrosCenarioAtuais.percentualDeContribuicaoDaPrevcom ?? PERCENTUAL_PREVCOM_PADRAO,
+                    anoIngresso: parametrosCenarioAtuais.anoIngresso ?? ANO_INGRESSO_PADRAO,
+                    ultimaPromocao: parametrosCenarioAtuais.ultimaPromocao || null,
+                    ultimaProgressao: parametrosCenarioAtuais.ultimaProgressao || null,
+                    salarioBaseSobreposto: parametrosCenarioAtuais.salarioBaseSobreposto ?? VENCIMENTO_BASICO.calcularVB(parametrosCenarioAtuais.posicaoCarreira ?? NIVEL_PADRAO)
                 };
-                
-                if(JSON.stringify(s.parametros) !== JSON.stringify(parametrosMigrados)) {
+
+                if (JSON.stringify(s.parametros) !== JSON.stringify(parametrosMigrados)) {
                     precisaAtualizar = true;
                 }
 
-                console.log(parametrosMigrados);
+                // console.log(parametrosMigrados);
 
                 return { ...s, parametros: parametrosMigrados };
             });
@@ -71,7 +77,10 @@ const simuladorCenario: React.FC = () => {
                     posicaoCarreira: NIVEL_PADRAO,
                     dependentes: 0,
                     diasTrabalhados: 20,
-                    ajusteDeSalario: 0,
+                    RGAMedio: 0,
+                    crescimentoGEPIMedio: 0,
+                    tetoGEPI: TETO_GEPI,
+                    tetoServidorPublico: TETO_SERVIDOR_PUBLICO,
                     valorVIDiaria: VALOR_DIARIO_VI,
                     pontosGEPI: PONTOS_GEPI,
                     valorPontoGEPI: VALOR_PONTO_GEPI,
@@ -79,7 +88,7 @@ const simuladorCenario: React.FC = () => {
                     filiadoAoSindicato: true,
                     prevcom: true,
                     percentualDeContribuicaoDaPrevcom: PERCENTUAL_PREVCOM_PADRAO,
-                    anoIngresso: ANO_INGRESSO_PADRAO, 
+                    anoIngresso: ANO_INGRESSO_PADRAO,
                     ultimaProgressao: ULTIMA_PROGRESSAO_PADRAO,
                     ultimaPromocao: ULTIMA_PROMOCAO_PADRAO
                 },
@@ -87,10 +96,10 @@ const simuladorCenario: React.FC = () => {
             defineCenarios([cenarioPadrao]);
             defineCenarioSelecionadoID(cenarioPadrao.id);
         } else if (!cenarioSelecionadoID && cenarios.length > 0) {
-             defineCenarioSelecionadoID(cenarios[0].id);
+            defineCenarioSelecionadoID(cenarios[0].id);
         }
     }, [cenarios, cenarioSelecionadoID]);
-    
+
     const projecoes = useMemo(() => {
         const resultados: { [key: string]: dadosAnuais[] } = {};
         cenarios.forEach(s => {
@@ -126,14 +135,14 @@ const simuladorCenario: React.FC = () => {
     const removeCenario = (id: string) => {
         defineCenarios(prev => {
             const newCenarios = prev.filter(s => s.id !== id);
-             if (cenarioSelecionadoID === id) {
+            if (cenarioSelecionadoID === id) {
                 defineCenarioSelecionadoID(newCenarios.length > 0 ? newCenarios[0].id : null);
             }
             return newCenarios;
         });
     };
-    
-    const handleDataPointClick = (year: number) => {
+
+    const gerenciarCliqueGrafico = (year: number) => {
         defineAnoSelecionado(year);
         if (dadosGrafico.length > 0) {
             const dadosAnuais = dadosGrafico.find(d => d.year === year);
@@ -154,17 +163,16 @@ const simuladorCenario: React.FC = () => {
     };
 
     const cenarioSelecionado = cenarios.find(s => s.id === cenarioSelecionadoID);
-    const anoSelecionadoData = anoSelecionado && cenarioSelecionadoID && projecoes[cenarioSelecionadoID] ? projecoes[cenarioSelecionadoID].find(d => d.year === anoSelecionado) : null;
-
+    const anoSelecionadoData = anoSelecionado && cenarioSelecionadoID && projecoes[cenarioSelecionadoID] ? projecoes[cenarioSelecionadoID].find(d => d.ano === anoSelecionado) : null;
 
     return (
         <div className="space-y-8">
-             <h1 className="text-4xl font-bold text-center text-gray-800 dark:text-gray-100">
+            <h1 className="text-4xl font-bold text-center text-gray-800 dark:text-gray-100">
                 Simulador de Cenários
                 <span className="block text-xl font-normal text-primary-600 dark:text-primary-400">Auditor Fiscal SEF/MG</span>
             </h1>
 
-            <ControleCenario 
+            <ControleCenario
                 cenarios={cenarios}
                 adicionarCenario={adicionarCenario}
                 atualizarCenario={atualizarCenario}
@@ -174,9 +182,9 @@ const simuladorCenario: React.FC = () => {
             />
 
             <Card>
-                 <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">Projeção da Remuneração Líquida Mensal</h2>
+                <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">Projeção da Remuneração Líquida Mensal</h2>
                 {cenarios.length > 0 && dadosGrafico.length > 0 ? (
-                    <GraficoRemuneracao data={dadosGrafico} cenarios={cenarios} onDataPointClick={handleDataPointClick} />
+                    <GraficoRemuneracao data={dadosGrafico} cenarios={cenarios} onDataPointClick={gerenciarCliqueGrafico} />
                 ) : (
                     <div className="h-96 flex items-center justify-center text-gray-500">
                         Adicione um cenário para visualizar o gráfico.
@@ -184,7 +192,7 @@ const simuladorCenario: React.FC = () => {
                 )}
             </Card>
 
-            <DetailsSelector
+            <SelecionadorDetalhes
                 cenarios={cenarios}
                 anosProjecao={anosProjecao}
                 cenarioSelecionadoID={cenarioSelecionadoID}
@@ -193,7 +201,7 @@ const simuladorCenario: React.FC = () => {
                 defineAnoSelecionado={defineAnoSelecionado}
             />
 
-            <CalculationDetails cenario={cenarioSelecionado || null} dadosAnuais={anoSelecionadoData || null} year={anoSelecionado} />
+            <DetalhesCalculo cenario={cenarioSelecionado || null} dadosAnuais={anoSelecionadoData || null} year={anoSelecionado} />
         </div>
     );
 };

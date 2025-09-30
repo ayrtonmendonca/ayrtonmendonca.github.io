@@ -2,10 +2,10 @@ import React from 'react';
 import { dadosAnuais, Cenario } from '../types';
 import Card from './ui/Card';
 
-interface CalculationDetailsProps {
+interface DetalhesCalculoPropriedades {
     cenario: Cenario | null;
     dadosAnuais: dadosAnuais | null;
-    year: number;
+    ano: number;
 }
 
 const DetailRow: React.FC<{ label: string; value: number; isTotal?: boolean; isNegative?: boolean }> = ({ label, value, isTotal = false, isNegative = false }) => (
@@ -24,7 +24,9 @@ const formatarNomePosicao = (position: string) => {
 };
 
 
-const CalculationDetails: React.FC<CalculationDetailsProps> = ({ cenario, dadosAnuais, year }) => {
+const DetalhesCalculo: React.FC<DetalhesCalculoPropriedades> = ({ cenario, dadosAnuais, ano }) => {
+    console.log(cenario, dadosAnuais, ano);
+
     if (!cenario || !dadosAnuais) {
         return (
             <Card className="text-center">
@@ -40,13 +42,13 @@ const CalculationDetails: React.FC<CalculationDetailsProps> = ({ cenario, dadosA
         valorVIDiaria,
     } = cenario.parametros;
 
-    const gepiLabel = `GEPI (${pontosGEPI.toLocaleString('pt-BR')} pts x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(dadosAnuais.valorPontoGEPI)})`;
-    const viLabel = `Verba Indenizatória (VI) (${diasTrabalhados} dias x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorVIDiaria)})`;
+    const rotuloGEPI = `GEPI (${pontosGEPI.toLocaleString('pt-BR')} pts x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(dadosAnuais.valorPontoGEPI)})`;
+    const rotuloVI = `Verba Indenizatória (VI) (${diasTrabalhados} dias x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorVIDiaria)})`;
     
     return (
         <Card>
             <h3 className="text-xl font-bold mb-4">
-                Detalhamento do Cálculo: <span style={{ color: cenario.cor }}>{cenario.nome}</span> - Ano {year}
+                Detalhamento do Cálculo: <span style={{ color: cenario.cor }}>{cenario.nome}</span> - Ano {ano}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -54,11 +56,13 @@ const CalculationDetails: React.FC<CalculationDetailsProps> = ({ cenario, dadosA
                     <h4 className="font-semibold text-lg mb-2 text-gray-700 dark:text-gray-300">Remuneração Mensal</h4>
                     <DetailRow label={`Vencimento Básico (${formatarNomePosicao(dadosAnuais.posicaoCarreira)})`} value={dadosAnuais.salarioBase} />
                     {dadosAnuais.ade > 0 && <DetailRow label="Adicional de Desempenho (ADE)" value={dadosAnuais.ade} />}
-                    <DetailRow label={gepiLabel} value={dadosAnuais.gepi} />
-                    <DetailRow label={viLabel} value={dadosAnuais.vi} />
+                    <DetailRow label={rotuloGEPI} value={dadosAnuais.gepi} />
+                    <DetailRow label={rotuloVI} value={dadosAnuais.vi} />
                     <DetailRow label="Remuneração Bruta" value={dadosAnuais.salarioBruto} isTotal={true}/>
                     <DetailRow label="Previdência (RPPS)" value={dadosAnuais.descontoRPPS} isNegative={true} />
                     {dadosAnuais.descontoPrevcom > 0 && <DetailRow label="Previdência Complementar (PREVCOM)" value={dadosAnuais.descontoPrevcom} isNegative={true} />}
+                    {dadosAnuais.abateTetoGepi > 0 && <DetailRow label="Abate Teto (GEPI)" value={dadosAnuais.abateTetoGepi} isNegative={true} />}
+                    {dadosAnuais.abateTeto > 0 && <DetailRow label="Abate Teto" value={dadosAnuais.abateTeto} isNegative={true} />}
                     <DetailRow label="Imposto de Renda (IRRF)" value={dadosAnuais.descontoIR} isNegative={true} />
                     {dadosAnuais.descontoSindifisco > 0 && <DetailRow label="Contribuição SINDIFISCO" value={dadosAnuais.descontoSindifisco} isNegative={true} />}
                     <DetailRow label="Remuneração Líquida Mensal" value={dadosAnuais.salarioLiquido} isTotal={true}/>
@@ -73,4 +77,4 @@ const CalculationDetails: React.FC<CalculationDetailsProps> = ({ cenario, dadosA
     );
 };
 
-export default CalculationDetails;
+export default DetalhesCalculo;

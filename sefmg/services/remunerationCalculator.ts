@@ -92,11 +92,15 @@ const calcularADE = (anosNoServico: number): number => {
 };
 
 export const calcularPorAno = (cenario: Cenario, anoFuturo: number): detalhamentoMensal => {
+    console.log(cenario.parametros);
     const {
         posicaoCarreira,
         dependentes,
         diasTrabalhados,
-        ajusteDeSalario,
+        RGAMedio,
+        crescimentoGEPIMedio,
+        tetoGEPI,
+        tetoServidorPublico,
         valorVIDiaria,
         pontosGEPI,
         salarioBaseSobreposto,
@@ -113,27 +117,32 @@ export const calcularPorAno = (cenario: Cenario, anoFuturo: number): detalhament
     //posicaoAtual: string, anosNoServico: number, ultimaPromocao: number, ultimaProgressao: number, anoFuturo: number
 
     const posicaoEfetiva = calcularPosicao(posicaoCarreira, anoIngresso, ultimaPromocao, ultimaProgressao, anoFuturo);
-    const percentualADE = calcularADE(anoFuturo - anoIngresso);
+    let anoAtual = new Date().getFullYear();
+
+    const percentualADE = calcularADE(anoAtual + anoFuturo - anoIngresso);
 
     // Calculate components
     const salarioBaseParaPosicaoEfetiva = (VENCIMENTO_BASICO.calcularVB(posicaoEfetiva) || 0);
     const fatorMultiplicacao = salarioBaseSobreposto / VENCIMENTO_BASICO.calcularVB(posicaoCarreira);
     const salarioBaseParaPosicaoEfetivaCorrigido = salarioBaseParaPosicaoEfetiva * fatorMultiplicacao;
 
-    const reajusteImediato = 1 + (ajusteDeSalario / 100);
-    const pontoGEPIAjustado = valorPontoGEPI * reajusteImediato;
+    const reajusteRGA = (1 + (RGAMedio / 100)) ** anoFuturo;
+    const reajusteGEPI = (1 + (crescimentoGEPIMedio / 100)) ** anoFuturo;
 
-    const salarioBase = salarioBaseParaPosicaoEfetivaCorrigido * reajusteImediato;
+    const pontoGEPIAjustado = valorPontoGEPI * reajusteRGA * reajusteGEPI;
+
+    const salarioBase = salarioBaseParaPosicaoEfetivaCorrigido * reajusteRGA;
     const ade = salarioBase * percentualADE;
     const gepi = pontosGEPI * pontoGEPIAjustado;
     const vi = diasTrabalhados * valorVIDiaria;
-    const abateTetoGepi = Math.min(TETO_GEPI * VENCIMENTO_BASICO.calcularVB('II-J') - gepi, 0);
-    const abateTetoServidorPublico = Math.min(TETO_SERVIDOR_PUBLICO - salarioBase + gepi + ade - abateTetoGepi, 0);
+    const abateTetoGepi = Math.max(gepi - tetoGEPI * VENCIMENTO_BASICO.calcularVB('II-J'), 0);
+    const gepiEfetiva = gepi - abateTetoGepi;
+    const abateTetoServidorPublico = Math.max((salarioBase + gepiEfetiva + ade) - tetoServidorPublico, 0);
 
+    const salarioBruto = salarioBase + gepi + ade + vi;
     const rendaTributavel = salarioBase + gepi + ade - abateTetoGepi - abateTetoServidorPublico;
-    const salarioBruto = rendaTributavel + vi;
 
-    const descontoSindifisco = filiadoAoSindicato ? (VENCIMENTO_BASICO.calcularVB('I-A') + Math.min(gepi, TETO_GEPI * VENCIMENTO_BASICO.calcularVB('II-J'))) * 0.01 : 0;
+    const descontoSindifisco = filiadoAoSindicato ? (VENCIMENTO_BASICO.calcularVB('I-A') + Math.min(gepi, tetoGEPI * VENCIMENTO_BASICO.calcularVB('II-J'))) * 0.01 : 0;
     
     // Pension Calculations
     let descontoRPPS = 0;
@@ -154,16 +163,16 @@ export const calcularPorAno = (cenario: Cenario, anoFuturo: number): detalhament
 
     const descontoIR = calcularIR(Math.max(0, irBaseDeCalculo));
 
-    const salarioLiquido = salarioBruto - descontoRPPS - descontoPrevcom - descontoIR - descontoSindifisco;
+    const salarioLiquido = salarioBruto - descontoRPPS - descontoPrevcom - descontoIR - descontoSindifisco - abateTetoGepi - abateTetoServidorPublico;
 
     
-    /*console.log([
+    console.log([
         {posicaoEfetiva},
         {percentualADE},
         {salarioBaseParaPosicaoEfetiva},
         {fatorMultiplicacao},
         {salarioBaseParaPosicaoEfetivaCorrigido},
-        {reajusteImediato},
+        {reajusteRGA},
         {pontoGEPIAjustado},
         {salarioBase},
         {ade},
@@ -196,7 +205,7 @@ export const calcularPorAno = (cenario: Cenario, anoFuturo: number): detalhament
         abateTetoGepi,
         abateTeto: abateTetoServidorPublico,
         posicaoCarreira: posicaoEfetiva    
-    });  */
+    });
 
     return {
         salarioBruto,

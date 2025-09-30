@@ -3,7 +3,7 @@ import { Cenario } from '../types';
 import Card from './ui/Card';
 import Select from './ui/Select';
 
-interface DetailsSelectorProps {
+interface SelecionadorDetalhesPropriedades {
     cenarios: Cenario[];
     anosProjecao: number;
     cenarioSelecionadoID: string | null;
@@ -12,7 +12,7 @@ interface DetailsSelectorProps {
     defineAnoSelecionado: (year: number) => void;
 }
 
-const DetailsSelector: React.FC<DetailsSelectorProps> = ({
+const SelecionadorDetalhes: React.FC<SelecionadorDetalhesPropriedades> = ({
     cenarios,
     anosProjecao,
     cenarioSelecionadoID,
@@ -21,7 +21,7 @@ const DetailsSelector: React.FC<DetailsSelectorProps> = ({
     defineAnoSelecionado,
 }) => {
     const anoInicio = new Date().getFullYear();
-    const anosDIsponiveis = Array.from({ length: anosProjecao }, (_, i) => anoInicio + i);
+    const anosDisponiveis = Array.from({ length: anosProjecao }, (_, i) => anoInicio + i);
 
     return (
         <Card>
@@ -48,9 +48,9 @@ const DetailsSelector: React.FC<DetailsSelectorProps> = ({
                     onChange={(e) => defineAnoSelecionado(parseInt(e.target.value))}
                     aria-label="Selecionar ano para detalhes"
                 >
-                    {anosDIsponiveis.map((year) => (
-                        <option key={year} value={year}>
-                            {year}
+                    {anosDisponiveis.map((ano) => (
+                        <option key={ano} value={ano}>
+                            {ano}
                         </option>
                     ))}
                 </Select>
@@ -59,4 +59,4 @@ const DetailsSelector: React.FC<DetailsSelectorProps> = ({
     );
 };
 
-export default DetailsSelector;
+export default SelecionadorDetalhes;
