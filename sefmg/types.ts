@@ -56,6 +56,7 @@ export interface detalhamentoMensal {
     abateTetoGepi: number;
     abateTeto: number;
     posicaoCarreira: string;
+    percentualADE: number;
 }
 
 export interface dadosAnuais extends detalhamentoMensal {

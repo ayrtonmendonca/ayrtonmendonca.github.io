@@ -214,6 +214,7 @@ export const calcularPorAno = (cenario: Cenario, anoFuturo: number): detalhament
         gepi,
         valorPontoGEPI: pontoGEPIAjustado,
         vi,
+        percentualADE,
         ade,
         descontoRPPS,
         descontoPrevcom,

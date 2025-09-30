@@ -9,6 +9,7 @@ import {
 } from '../constants';
 import { calcularProjecaoAnual } from '../services/remunerationCalculator';
 import useLocalStorage from '../hooks/useLocalStorage';
+import ControleGlobal from './GlobalControls';
 import ControleCenario from './ScenarioControls';
 import GraficoRemuneracao from './RemunerationChart';
 import DetalhesCalculo from './CalculationDetails';
@@ -172,6 +173,8 @@ const simuladorCenario: React.FC = () => {
                 <span className="block text-xl font-normal text-primary-600 dark:text-primary-400">Auditor Fiscal SEF/MG</span>
             </h1>
 
+
+
             <ControleCenario
                 cenarios={cenarios}
                 adicionarCenario={adicionarCenario}
@@ -181,6 +184,10 @@ const simuladorCenario: React.FC = () => {
                 defineAnosProjecao={defineAnosProjecao}
             />
 
+            <ControleGlobal 
+            
+            />
+            
             <Card>
                 <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">Projeção da Remuneração Líquida Mensal</h2>
                 {cenarios.length > 0 && dadosGrafico.length > 0 ? (

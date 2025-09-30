@@ -55,7 +55,7 @@ const DetalhesCalculo: React.FC<DetalhesCalculoPropriedades> = ({ cenario, dados
                 <div>
                     <h4 className="font-semibold text-lg mb-2 text-gray-700 dark:text-gray-300">Remuneração Mensal</h4>
                     <DetailRow label={`Vencimento Básico (${formatarNomePosicao(dadosAnuais.posicaoCarreira)})`} value={dadosAnuais.salarioBase} />
-                    {dadosAnuais.ade > 0 && <DetailRow label="Adicional de Desempenho (ADE)" value={dadosAnuais.ade} />}
+                    {dadosAnuais.ade > 0 && <DetailRow label={`Adicional de Desempenho - ADE (${dadosAnuais.percentualADE.toLocaleString(undefined, {style: 'percent', minimumFractionDigits: 0})})`} value={dadosAnuais.ade} />}
                     <DetailRow label={rotuloGEPI} value={dadosAnuais.gepi} />
                     <DetailRow label={rotuloVI} value={dadosAnuais.vi} />
                     <DetailRow label="Remuneração Bruta" value={dadosAnuais.salarioBruto} isTotal={true}/>
