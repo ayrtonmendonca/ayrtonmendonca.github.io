@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { parametrosGlobais } from '../types';
-import { POSICAO_CARREIRA, POSICAO_CARREIRA_PADRAO, ANO_INGRESSO_PADRAO, VALOR_PONTO_GEPI, TETO_SERVIDOR_PUBLICO, PERCENTUAL_PREVCOM_PADRAO, TETO_GEPI } from '../constants';
+import { POSICAO_CARREIRA, POSICAO_CARREIRA_PADRAO, ANO_INGRESSO_PADRAO, VALOR_PONTO_GEPI, TETO_SERVIDOR_PUBLICO, PERCENTUAL_PREVCOM_PADRAO, TETO_GEPI, CRESCIMENTO_GEPI_MEDIO_PADRAO } from '../constants';
 import Card from './ui/Card';
 import Input from './ui/Input';
 import Select from './ui/Select';
+import Button from './ui/Button';
 
 interface propriedadesControleGlobal {
     parametrosGlobais: parametrosGlobais;
@@ -20,7 +21,7 @@ const parametrosGlobaisPadrao: parametrosGlobais = {
     anoIngresso: ANO_INGRESSO_PADRAO,
     valorPontoGEPI: VALOR_PONTO_GEPI,
     RGAMedio: 0,
-    crescimentoGEPIMedio: 0,
+    crescimentoGEPIMedio: CRESCIMENTO_GEPI_MEDIO_PADRAO,
     tetoGEPI: TETO_GEPI,
     tetoServidorPublico: TETO_SERVIDOR_PUBLICO,
     dependentes: 0,
@@ -64,8 +65,21 @@ const ControleGlobal: React.FC<propriedadesControleGlobal> = ({ parametrosGlobai
     return (
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
             <Card className="lg:col-span-1">
-                <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">Parâmetros Globais</h3>
-
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Parâmetros Globais</h3>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        className="text-xs px-3 py-1"
+                        onClick={e => {
+                            defineParametrosGlobais(parametrosGlobaisPadrao);
+                            if (e && e.currentTarget) e.currentTarget.blur();
+                        }}
+                        title="Reiniciar para os valores padrão"
+                    >
+                        Reiniciar Parâmetros
+                    </Button>
+                </div>
                 {/* Grid de inputs */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <Select

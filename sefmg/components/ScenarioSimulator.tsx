@@ -14,6 +14,7 @@ import GraficoRemuneracao from './RemunerationChart';
 import DetalhesCalculo from './CalculationDetails';
 import SelecionadorDetalhes from './DetailsSelector';
 import Card from './ui/Card';
+import Select from './ui/Select';
 
 const simuladorCenario: React.FC = () => {
     const [cenarios, defineCenarios] = useLocalStorage<Cenario[]>('sef-mg-cenarios', []);
@@ -21,6 +22,7 @@ const simuladorCenario: React.FC = () => {
     const [anoSelecionado, defineAnoSelecionado] = useState<number>(new Date().getFullYear());
     const [cenarioSelecionadoID, defineCenarioSelecionadoID] = useState<string | null>(null);
     // console.log(parametrosGlobais);
+    const [tipoRemuneracao, setTipoRemuneracao] = useState<'liquida' | 'bruta' | 'tributavel'>('liquida');
     // This effect runs ONCE on mount to sanitize data from localStorage, ensuring compatibility with the current app version.
     useEffect(() => {
         if (cenarios.length > 0) {
@@ -55,19 +57,65 @@ const simuladorCenario: React.FC = () => {
 
     useEffect(() => {
         if (cenarios.length === 0) {
-            const cenarioPadrao: Cenario = {
-                id: uuidv4(),
-                nome: 'Cenário Atual',
-                cor: PALETA_DE_CORES[0],
-                parametros: {
-                    valorVIDiaria: VALOR_DIARIO_VI,
-                    pontosGEPI: PONTOS_GEPI,
-                    salarioBaseInicial: VENCIMENTO_BASICO.calcularVB('I-A'),
-                    repique: REPIQUE_PADRAO
+            const cenariosPadrao: Cenario[] = [
+                {
+                    id: uuidv4(),
+                    nome: 'Cenário Atual',
+                    cor: PALETA_DE_CORES[0],
+                    parametros: {
+                        salarioBaseInicial: 5975.21,
+                        pontosGEPI: 11000,
+                        valorVIDiaria: 179.58,
+                        repique: true
+                    }
                 },
-            };
-            defineCenarios([cenarioPadrao]);
-            defineCenarioSelecionadoID(cenarioPadrao.id);
+                {
+                    id: uuidv4(),
+                    nome: 'Migração de 6.000 pts. Com Repique',
+                    cor: PALETA_DE_CORES[1],
+                    parametros: {
+                        salarioBaseInicial: 18035.21,
+                        pontosGEPI: 5000,
+                        valorVIDiaria: 179.58,
+                        repique: true
+                    }
+                },
+                {
+                    id: uuidv4(),
+                    nome: 'Migração de 6.000 pts. Sem Repique',
+                    cor: PALETA_DE_CORES[2],
+                    parametros: {
+                        salarioBaseInicial: 18035.21,
+                        pontosGEPI: 5000,
+                        valorVIDiaria: 179.58,
+                        repique: false
+                    }
+                },
+                {
+                    id: uuidv4(),
+                    nome: 'Migração de 11.000 pts. Com Repique',
+                    cor: PALETA_DE_CORES[3],
+                    parametros: {
+                        salarioBaseInicial: 28085.21,
+                        pontosGEPI: 0,
+                        valorVIDiaria: 179.58,
+                        repique: false
+                    }
+                },
+                {
+                    id: uuidv4(),
+                    nome: 'Migração de 11.000 pts. Sem Repique',
+                    cor: PALETA_DE_CORES[4],
+                    parametros: {
+                        salarioBaseInicial: 28085.21,
+                        pontosGEPI: 0,
+                        valorVIDiaria: 179.58,
+                        repique: false
+                    }
+                }
+            ];
+            defineCenarios(cenariosPadrao);
+            defineCenarioSelecionadoID(cenariosPadrao[0].id);
         } else if (!cenarioSelecionadoID && cenarios.length > 0) {
             defineCenarioSelecionadoID(cenarios[0].id);
         }
@@ -90,12 +138,16 @@ const simuladorCenario: React.FC = () => {
             const dataPoint: dadosGrafico = { ano };
             cenarios.forEach(s => {
                 if (projecoes[s.id] && projecoes[s.id][index]) {
-                    dataPoint[s.id] = projecoes[s.id][index].salarioLiquido;
+                    let valor = 0;
+                    if (tipoRemuneracao === 'liquida') valor = projecoes[s.id][index].salarioLiquido;
+                    else if (tipoRemuneracao === 'bruta') valor = projecoes[s.id][index].salarioBruto;
+                    else if (tipoRemuneracao === 'tributavel') valor = projecoes[s.id][index].rendaTributavel;
+                    dataPoint[s.id] = valor;
                 }
             });
             return dataPoint;
         });
-    }, [projecoes, cenarios]);
+    }, [projecoes, cenarios, tipoRemuneracao]);
 
     const adicionarCenario = (cenario: Cenario) => {
         defineCenarios(prev => [...prev, cenario]);
@@ -144,8 +196,6 @@ const simuladorCenario: React.FC = () => {
                 <span className="block text-xl font-normal text-primary-600 dark:text-primary-400">Auditor Fiscal SEF/MG</span>
             </h1>
 
-
-
             <ControleCenario
                 cenarios={cenarios}
                 adicionarCenario={adicionarCenario}
@@ -159,9 +209,29 @@ const simuladorCenario: React.FC = () => {
             />
 
             <Card>
-                <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">Projeção da Remuneração Líquida Mensal</h2>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-2">
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Projeção da Remuneração Mensal</h2>
+                    <div className="w-full md:w-64">
+                        <Select
+                            label="Tipo de Remuneração"
+                            id="tipoRemuneracao"
+                            value={tipoRemuneracao}
+                            onChange={e => setTipoRemuneracao(e.target.value as 'liquida' | 'bruta' | 'tributavel')}
+                        >
+                            <option value="liquida">Remuneração Líquida</option>
+                            <option value="bruta">Remuneração Bruta</option>
+                            <option value="tributavel">Remuneração Tributável</option>
+                        </Select>
+                    </div>
+                </div>
                 {cenarios.length > 0 && dadosGrafico.length > 0 ? (
-                    <GraficoRemuneracao data={dadosGrafico} cenarios={cenarios} onDataPointClick={gerenciarCliqueGrafico} />
+                    <GraficoRemuneracao
+                        data={dadosGrafico}
+                        cenarios={cenarios}
+                        onDataPointClick={gerenciarCliqueGrafico}
+                        projecoes={projecoes}
+                        tipoRemuneracao={tipoRemuneracao}
+                    />
                 ) : (
                     <div className="h-96 flex items-center justify-center text-gray-500">
                         Adicione um cenário para visualizar o gráfico.
