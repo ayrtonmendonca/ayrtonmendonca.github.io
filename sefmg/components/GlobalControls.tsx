@@ -74,6 +74,7 @@ const ControleGlobal: React.FC<propriedadesControleGlobal> = ({ cenarios, adicio
                         id="valorPontoGEPI"
                         type="number"
                         step="0.01"
+                        prefix="R$"
                         value={parametrosGlobaisAtuais.valorPontoGEPI}
                         onChange={(e) => defineParametrosGlobaisAtuais(p => ({ ...p, valorPontoGEPI: parseFloat(e.target.value) || 0 }))}
                     />
@@ -106,6 +107,8 @@ const ControleGlobal: React.FC<propriedadesControleGlobal> = ({ cenarios, adicio
                         label="Teto do Servidor Público"
                         id="tetoServidorPublico"
                         type="number"
+                        step="0.01"
+                        prefix="R$"
                         value={parametrosGlobaisAtuais.tetoServidorPublico}
                         onChange={(e) => defineParametrosGlobaisAtuais(p => ({ ...p, tetoServidorPublico: parseFloat(e.target.value) || 0 }))}
                     />
@@ -127,48 +130,69 @@ const ControleGlobal: React.FC<propriedadesControleGlobal> = ({ cenarios, adicio
                         value={parametrosGlobaisAtuais.diasTrabalhados}
                         onChange={(e) => defineParametrosGlobaisAtuais(p => ({ ...p, diasTrabalhados: parseInt(e.target.value) || 0 }))}
                     />
-                </div>
 
-                {/* Caixas especiais continuam full width */}
-                <div className="mt-4 space-y-2 rounded-md border border-gray-200 dark:border-gray-700 p-3">
-                    <div className="flex items-center space-x-2">
-                        <input
-                            type="checkbox"
-                            id="prevcom"
-                            checked={parametrosGlobaisAtuais.prevcom}
-                            onChange={(e) => defineParametrosGlobaisAtuais(p => ({ ...p, prevcom: e.target.checked }))}
-                            className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                        />
-                        <label htmlFor="prevcom" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Associado à PREVCOM-MG
-                        </label>
+
+                    {/* Caixas especiais continuam full width */}
+                    <div className="space-y-2 rounded-md border border-gray-200 dark:border-gray-700 p-3">
+                        <div className="flex items-center space-x-2">
+                            {/* Primeiro terço: PREVCOM + % de contribuição */}
+
+                            <input
+                                type="checkbox"
+                                id="prevcom"
+                                checked={parametrosGlobaisAtuais.prevcom}
+                                onChange={(e) => defineParametrosGlobaisAtuais(p => ({ ...p, prevcom: e.target.checked }))}
+                                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                            <label htmlFor="prevcom" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Associado à PREVCOM-MG
+                            </label>
+                        </div>
+                        {parametrosGlobaisAtuais.prevcom && (
+                            <Input
+                                label="Participação PREVCOM (%)"
+                                id="prevcomPercentage"
+                                type="number"
+                                step="0.01"
+                                value={parametrosGlobaisAtuais.percentualDeContribuicaoDaPrevcom}
+                                onChange={(e) => defineParametrosGlobaisAtuais(p => ({
+                                    ...p,
+                                    percentualDeContribuicaoDaPrevcom: parseFloat(e.target.value) || 0
+                                }))}
+                                className="w-24"
+                            />
+                        )}
                     </div>
-                    {parametrosGlobaisAtuais.prevcom && (
-                        <Input
-                            label="Participação PREVCOM (%)"
-                            id="prevcomPercentage"
-                            type="number"
-                            step="0.01"
-                            value={parametrosGlobaisAtuais.percentualDeContribuicaoDaPrevcom}
-                            onChange={(e) => defineParametrosGlobaisAtuais(p => ({ ...p, percentualDeContribuicaoDaPrevcom: parseFloat(e.target.value) || 0 }))}
-                        />
-                    )}
-                </div>
 
-                <div className="mt-4 flex items-center space-x-2">
-                    <input
-                        type="checkbox"
-                        id="filiadoAoSindicato"
-                        checked={parametrosGlobaisAtuais.filiadoAoSindicato}
-                        onChange={(e) => defineParametrosGlobaisAtuais(p => ({ ...p, filiadoAoSindicato: e.target.checked }))}
-                        className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    {/* Segundo terço: SINDIFISCO */}
+                    <div className="flex-1 flex items-center justify-center">
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="filiadoAoSindicato"
+                                checked={parametrosGlobaisAtuais.filiadoAoSindicato}
+                                onChange={(e) => defineParametrosGlobaisAtuais(p => ({ ...p, filiadoAoSindicato: e.target.checked }))}
+                                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                            <label htmlFor="filiadoAoSindicato" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Filiado ao SINDIFISCO
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* Terceiro terço: Anos de Projeção */}
+                    <Input
+                        label="Anos de Projeção"
+                        id="anosProjecao"
+                        type="number"
+                        min="1"
+                        value={anosProjecao}
+                        onChange={(e) => defineAnosProjecao(parseInt(e.target.value) || 0)}
+                        className="w-24"
                     />
-                    <label htmlFor="filiadoAoSindicato" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Filiado ao SINDIFISCO
-                    </label>
                 </div>
-            </Card>
-        </div>
+            </Card >
+        </div >
     );
 };
 
