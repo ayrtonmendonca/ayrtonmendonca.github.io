@@ -79,7 +79,7 @@ const simuladorCenario: React.FC = () => {
             resultados[s.id] = calcularProjecaoAnual(parametrosGlobais, s);
         });
         return resultados;
-    }, [cenarios, parametrosGlobais.anosProjecao]);
+    }, [cenarios, parametrosGlobais]);
 
 
     const dadosGrafico: dadosGrafico[] = useMemo(() => {
