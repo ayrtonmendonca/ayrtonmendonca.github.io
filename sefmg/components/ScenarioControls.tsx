@@ -124,12 +124,17 @@ const ControleCenario: React.FC<propriedadesControleCenario> = ({
                             key={s.id}
                             className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded-lg"
                         >
-                            <div className="flex items-center">
-                                <span
-                                    className="w-4 h-4 rounded-full mr-3"
-                                    style={{ backgroundColor: s.cor }}
-                                ></span>
-                                <span className="font-semibold">{s.nome}</span>
+                            <div className="flex flex-col items-start">
+                                <div className="flex items-center">
+                                    <span
+                                        className="w-4 h-4 rounded-full mr-3"
+                                        style={{ backgroundColor: s.cor }}
+                                    ></span>
+                                    <span className="font-semibold">{s.nome}</span>
+                                </div>
+                                <span className="text-xs text-gray-600 dark:text-gray-300 mt-1 ml-7">
+                                    VB Inicial: R$ {s.parametros.salarioBaseInicial.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | GEPI: {s.parametros.pontosGEPI} pts | VI: R$ {s.parametros.valorVIDiaria.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Repique: {s.parametros.repique ? 'Sim' : 'Não'}
+                                </span>
                             </div>
                             <div className="space-x-2">
                                 <Button

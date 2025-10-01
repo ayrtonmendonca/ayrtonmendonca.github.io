@@ -34,6 +34,7 @@ export interface detalhamentoMensal {
     salarioBruto: number;
     salarioLiquido: number;
     salarioBase: number;
+    rendaTributavel: number;
     gepi: number;
     valorPontoGEPI: number;
     vi: number;
@@ -46,11 +47,14 @@ export interface detalhamentoMensal {
     abateTeto: number;
     posicaoCarreira: string;
     percentualADE: number;
+    diasTrabalhados: number;
 }
 
 export interface dadosAnuais extends detalhamentoMensal {
     ano: number;
     salarioLiquido: number;
+    salarioBruto: number;
+    salarioTributavel: number;
 }
 
 export interface dadosGrafico {

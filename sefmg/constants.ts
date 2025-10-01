@@ -92,13 +92,14 @@ export const ULTIMA_PROGRESSAO_PADRAO = null;
 export const ULTIMA_PROMOCAO_PADRAO = null;
 export const POSICAO_CARREIRA_PADRAO = 'I-A';
 export const REPIQUE_PADRAO = true;
+export const CRESCIMENTO_GEPI_MEDIO_PADRAO = 3.5;
 
 export const PARAMETROS_GLOBAIS_PADRAO = {
   posicaoCarreira: POSICAO_CARREIRA_PADRAO,
   anoIngresso: ANO_INGRESSO_PADRAO,
   valorPontoGEPI: VALOR_PONTO_GEPI,
   RGAMedio: 0,
-  crescimentoGEPIMedio: 0,
+  crescimentoGEPIMedio: CRESCIMENTO_GEPI_MEDIO_PADRAO,
   tetoGEPI: TETO_GEPI,
   tetoServidorPublico: TETO_SERVIDOR_PUBLICO,
   dependentes: 0,

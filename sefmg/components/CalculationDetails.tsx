@@ -27,6 +27,7 @@ const formatarNomePosicao = (position: string) => {
 const DetalhesCalculo: React.FC<DetalhesCalculoPropriedades> = ({ cenario, dadosAnuais, ano }) => {
     // console.log(cenario, dadosAnuais, ano);
 
+
     if (!cenario || !dadosAnuais) {
         return (
             <Card className="text-center">
@@ -38,12 +39,11 @@ const DetalhesCalculo: React.FC<DetalhesCalculoPropriedades> = ({ cenario, dados
     // Parameters are now guaranteed to exist due to sanitization on app load.
     const {
         pontosGEPI,
-        diasTrabalhados,
         valorVIDiaria,
     } = cenario.parametros;
 
     const rotuloGEPI = `GEPI (${pontosGEPI.toLocaleString('pt-BR')} pts x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(dadosAnuais.valorPontoGEPI)})`;
-    const rotuloVI = `Verba Indenizatória (VI) (${diasTrabalhados} dias x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorVIDiaria)})`;
+    const rotuloVI = `Verba Indenizatória (VI) (${dadosAnuais.diasTrabalhados} dias x ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorVIDiaria)})`;
     
     return (
         <Card>
