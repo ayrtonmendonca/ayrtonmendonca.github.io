@@ -248,7 +248,7 @@ const simuladorCenario: React.FC = () => {
                 defineAnoSelecionado={defineAnoSelecionado}
             />
 
-            <DetalhesCalculo cenario={cenarioSelecionado || null} dadosAnuais={anoSelecionadoData || null} year={anoSelecionado} />
+            <DetalhesCalculo cenario={cenarioSelecionado || null} dadosAnuais={anoSelecionadoData || null} ano={anoSelecionado} />
         </div>
     );
 };
