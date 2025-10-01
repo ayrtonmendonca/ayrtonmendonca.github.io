@@ -1,27 +1,15 @@
 export interface parametrosDeCenario {
-    posicaoCarreira: string;
-    dependentes: number;
-    diasTrabalhados: number;
-    RGAMedio: number;
-    crescimentoGEPIMedio: number;
-    tetoGEPI: number;
-    tetoServidorPublico: number;
     valorVIDiaria: number;
-    salarioBaseSobreposto: number;
+    salarioBaseInicial: number;
+    repique: boolean;
     pontosGEPI: number;
-    valorPontoGEPI: number;
-    filiadoAoSindicato: boolean;
-    prevcom: boolean;
-    percentualDeContribuicaoDaPrevcom: number;
-    anoIngresso: number;
-    ultimaPromocao: number;
-    ultimaProgressao: number;
 }
 
 export interface parametrosGlobais {
     posicaoCarreira: string;
     dependentes: number;
     diasTrabalhados: number;
+    valorPontoGEPI: number;
     RGAMedio: number;
     crescimentoGEPIMedio: number;
     tetoGEPI: number;
@@ -29,6 +17,7 @@ export interface parametrosGlobais {
     filiadoAoSindicato: boolean;
     prevcom: boolean;
     percentualDeContribuicaoDaPrevcom: number;
+    anosProjecao: number;
     anoIngresso: number;
     ultimaPromocao: number;
     ultimaProgressao: number;

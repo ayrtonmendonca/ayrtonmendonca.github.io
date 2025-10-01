@@ -1,11 +1,11 @@
 import React from 'react';
-import { Cenario } from '../types';
+import { Cenario, parametrosGlobais } from '../types';
 import Card from './ui/Card';
 import Select from './ui/Select';
 
 interface SelecionadorDetalhesPropriedades {
     cenarios: Cenario[];
-    anosProjecao: number;
+    parametrosGlobais: parametrosGlobais;
     cenarioSelecionadoID: string | null;
     defineCenarioSelecionadoID: (id: string) => void;
     anoSelecionado: number;
@@ -14,14 +14,15 @@ interface SelecionadorDetalhesPropriedades {
 
 const SelecionadorDetalhes: React.FC<SelecionadorDetalhesPropriedades> = ({
     cenarios,
-    anosProjecao,
+    parametrosGlobais,
     cenarioSelecionadoID,
     defineCenarioSelecionadoID,
     anoSelecionado,
     defineAnoSelecionado,
 }) => {
+    // console.log(parametrosGlobais);
     const anoInicio = new Date().getFullYear();
-    const anosDisponiveis = Array.from({ length: anosProjecao }, (_, i) => anoInicio + i);
+    const anosDisponiveis = Array.from({ length: parametrosGlobais.anosProjecao }, (_, i) => anoInicio + i);
 
     return (
         <Card>

@@ -25,7 +25,7 @@ const formatarNomePosicao = (position: string) => {
 
 
 const DetalhesCalculo: React.FC<DetalhesCalculoPropriedades> = ({ cenario, dadosAnuais, ano }) => {
-    console.log(cenario, dadosAnuais, ano);
+    // console.log(cenario, dadosAnuais, ano);
 
     if (!cenario || !dadosAnuais) {
         return (
