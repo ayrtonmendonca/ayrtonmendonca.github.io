@@ -53,7 +53,7 @@ const ControleCenario: React.FC<propriedadesControleCenario> = ({
         const { salarioBaseInicial, pontosGEPI, valorVIDiaria } = parametrosCenarioAtuais;
         if (
             salarioBaseInicial === undefined || salarioBaseInicial <= 0 ||
-            pontosGEPI === undefined || pontosGEPI <= 0 ||
+            pontosGEPI === undefined || pontosGEPI < 0 ||
             valorVIDiaria === undefined || valorVIDiaria <= 0
         ) {
             alert("Preencha todos os campos obrigatórios corretamente!");
@@ -83,10 +83,12 @@ const ControleCenario: React.FC<propriedadesControleCenario> = ({
 
     const reiniciarFormulario = () => {
         defineEstaEditando(null);
-        defineNomeCenario("");
+        defineNomeCenario(`Cenário ${cenarios.length + 1}`);
         defineParametrosCenarioAtuais({
             valorVIDiaria: VALOR_DIARIO_VI,
             salarioBaseInicial: VENCIMENTO_BASICO.calcularVB('I-A'),
+            pontosGEPI: PONTOS_GEPI,
+            repique: true
         });
     };
 
@@ -111,7 +113,10 @@ const ControleCenario: React.FC<propriedadesControleCenario> = ({
                         Cenários Ativos
                     </h3>
                     <div className="flex items-center space-x-2">
-                        <Button onClick={() => setAbrirModal(true)}>
+                        <Button onClick={() => {
+                            reiniciarFormulario();
+                            setAbrirModal(true);
+                        }}>
                             Adicionar Cenário
                         </Button>
                     </div>
@@ -133,7 +138,7 @@ const ControleCenario: React.FC<propriedadesControleCenario> = ({
                                     <span className="font-semibold">{s.nome}</span>
                                 </div>
                                 <span className="text-xs text-gray-600 dark:text-gray-300 mt-1 ml-7">
-                                    VB Inicial: R$ {s.parametros.salarioBaseInicial.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | GEPI: {s.parametros.pontosGEPI} pts | VI: R$ {s.parametros.valorVIDiaria.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Repique: {s.parametros.repique ? 'Sim' : 'Não'}
+                                    VB Inicial: R$ {s.parametros.salarioBaseInicial.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | GEPI: {s.parametros.pontosGEPI.toLocaleString('pt-BR')} pts | VI: R$ {s.parametros.valorVIDiaria.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Repique: {s.parametros.repique ? 'Sim' : 'Não'}
                                 </span>
                             </div>
                             <div className="space-x-2">
@@ -172,10 +177,11 @@ const ControleCenario: React.FC<propriedadesControleCenario> = ({
                     />
 
                     <Input
-                        label="Vencimento Básico Inicial (R$)"
+                        label="Vencimento Básico Inicial"
                         id="salarioBaseInicial"
                         type="number"
                         step="0.01"
+                        prefix="R$"
                         value={parametrosCenarioAtuais.salarioBaseInicial}
                         onChange={(e) =>
                             defineParametrosCenarioAtuais((p) => ({
@@ -207,13 +213,15 @@ const ControleCenario: React.FC<propriedadesControleCenario> = ({
                         label="Pontos GEPI"
                         id="pontosGEPI"
                         type="number"
+                        min={0}
                         value={parametrosCenarioAtuais.pontosGEPI}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                            const value = parseFloat(e.target.value);
                             defineParametrosCenarioAtuais((p) => ({
                                 ...p,
-                                pontosGEPI: parseFloat(e.target.value) || 0,
-                            }))
-                        }
+                                pontosGEPI: isNaN(value) ? 0 : Math.max(0, value),
+                            }));
+                        }}
                     />
 
                     <Input

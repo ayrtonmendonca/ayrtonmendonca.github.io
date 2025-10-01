@@ -57,19 +57,65 @@ const simuladorCenario: React.FC = () => {
 
     useEffect(() => {
         if (cenarios.length === 0) {
-            const cenarioPadrao: Cenario = {
-                id: uuidv4(),
-                nome: 'Cenário Atual',
-                cor: PALETA_DE_CORES[0],
-                parametros: {
-                    valorVIDiaria: VALOR_DIARIO_VI,
-                    pontosGEPI: PONTOS_GEPI,
-                    salarioBaseInicial: VENCIMENTO_BASICO.calcularVB('I-A'),
-                    repique: REPIQUE_PADRAO
+            const cenariosPadrao: Cenario[] = [
+                {
+                    id: uuidv4(),
+                    nome: 'Cenário Atual',
+                    cor: PALETA_DE_CORES[0],
+                    parametros: {
+                        salarioBaseInicial: 5975.21,
+                        pontosGEPI: 11000,
+                        valorVIDiaria: 179.58,
+                        repique: true
+                    }
                 },
-            };
-            defineCenarios([cenarioPadrao]);
-            defineCenarioSelecionadoID(cenarioPadrao.id);
+                {
+                    id: uuidv4(),
+                    nome: 'Migração de 6.000 pts. Com Repique',
+                    cor: PALETA_DE_CORES[1],
+                    parametros: {
+                        salarioBaseInicial: 18035.21,
+                        pontosGEPI: 5000,
+                        valorVIDiaria: 179.58,
+                        repique: true
+                    }
+                },
+                {
+                    id: uuidv4(),
+                    nome: 'Migração de 6.000 pts. Sem Repique',
+                    cor: PALETA_DE_CORES[2],
+                    parametros: {
+                        salarioBaseInicial: 18035.21,
+                        pontosGEPI: 5000,
+                        valorVIDiaria: 179.58,
+                        repique: false
+                    }
+                },
+                {
+                    id: uuidv4(),
+                    nome: 'Migração de 11.000 pts. Com Repique',
+                    cor: PALETA_DE_CORES[3],
+                    parametros: {
+                        salarioBaseInicial: 28085.21,
+                        pontosGEPI: 0,
+                        valorVIDiaria: 179.58,
+                        repique: false
+                    }
+                },
+                {
+                    id: uuidv4(),
+                    nome: 'Migração de 11.000 pts. Sem Repique',
+                    cor: PALETA_DE_CORES[4],
+                    parametros: {
+                        salarioBaseInicial: 28085.21,
+                        pontosGEPI: 0,
+                        valorVIDiaria: 179.58,
+                        repique: false
+                    }
+                }
+            ];
+            defineCenarios(cenariosPadrao);
+            defineCenarioSelecionadoID(cenariosPadrao[0].id);
         } else if (!cenarioSelecionadoID && cenarios.length > 0) {
             defineCenarioSelecionadoID(cenarios[0].id);
         }

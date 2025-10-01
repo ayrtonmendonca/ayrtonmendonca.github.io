@@ -78,11 +78,11 @@ export const FAIXAS_PENSAO = [
 
 // IRRF faixas (monthly)
 export const FAIXAS_IR = [
-  { limite: 2259.20, taxa: 0, deducao: 0 },
-  { limite: 2826.65, taxa: 0.075, deducao: 169.44 },
-  { limite: 3751.05, taxa: 0.15, deducao: 381.44 },
-  { limite: 4664.68, taxa: 0.225, deducao: 662.77 },
-  { limite: Infinity, taxa: 0.275, deducao: 896.00 },
+  { limite: 2428.8, taxa: 0, deducao: 0 },
+  { limite: 2826.65, taxa: 0.075, deducao: 182.16 },
+  { limite: 3751.05, taxa: 0.15, deducao: 394.16 },
+  { limite: 4664.68, taxa: 0.225, deducao: 675.49 },
+  { limite: Infinity, taxa: 0.275, deducao: 908.73 },
 ];
 
 export const DEDUCAO_POR_DEPENDENTE = 189.59;
@@ -92,7 +92,7 @@ export const ULTIMA_PROGRESSAO_PADRAO = null;
 export const ULTIMA_PROMOCAO_PADRAO = null;
 export const POSICAO_CARREIRA_PADRAO = 'I-A';
 export const REPIQUE_PADRAO = true;
-export const CRESCIMENTO_GEPI_MEDIO_PADRAO = 3.5;
+export const CRESCIMENTO_GEPI_MEDIO_PADRAO = 4;
 
 export const PARAMETROS_GLOBAIS_PADRAO = {
   posicaoCarreira: POSICAO_CARREIRA_PADRAO,

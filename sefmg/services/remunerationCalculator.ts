@@ -128,8 +128,11 @@ export const calcularPorAno = (parametrosGlobais: parametrosGlobais, cenario: Ce
 
     // Calculate components
     const salarioBaseParaPosicaoEfetiva = (VENCIMENTO_BASICO.calcularVB(posicaoEfetiva) || 0);
+
     const fatorMultiplicacao = salarioBaseInicial / VENCIMENTO_BASICO.calcularVB('I-A');
-    const salarioBaseParaPosicaoEfetivaCorrigido = salarioBaseParaPosicaoEfetiva * fatorMultiplicacao;
+    const fatorSoma = salarioBaseInicial - VENCIMENTO_BASICO.calcularVB('I-A');
+
+    const salarioBaseParaPosicaoEfetivaCorrigido = repique ? salarioBaseParaPosicaoEfetiva * fatorMultiplicacao : salarioBaseParaPosicaoEfetiva + fatorSoma;
 
     const reajusteRGA = (1 + (RGAMedio / 100)) ** anoFuturo;
     const reajusteGEPI = (1 + (crescimentoGEPIMedio / 100)) ** anoFuturo;
@@ -164,7 +167,7 @@ export const calcularPorAno = (parametrosGlobais: parametrosGlobais, cenario: Ce
     }
 
     const deducaoDependentes = dependentes * DEDUCAO_POR_DEPENDENTE;
-    const irBaseDeCalculo = rendaTributavel - descontoRPPS - descontoPrevcom - deducaoDependentes;
+    const irBaseDeCalculo = rendaTributavel - descontoRPPS - deducaoDependentes;
 
     const descontoIR = calcularIR(Math.max(0, irBaseDeCalculo));
 
