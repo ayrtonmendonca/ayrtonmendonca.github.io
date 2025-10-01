@@ -70,7 +70,7 @@ const DetalhesCalculo: React.FC<DetalhesCalculoPropriedades> = ({ cenario, dados
                 <div>
                     <h4 className="font-semibold text-lg mb-2 text-gray-700 dark:text-gray-300">Projeção Anual (aprox.)</h4>
                     <DetailRow label="Bruto Anual" value={(dadosAnuais.salarioBruto * 12) + (4 * (dadosAnuais.salarioBruto - dadosAnuais.vi) / 3) - (25 * valorVIDiaria)} />
-                    <DetailRow label="Líquido Anual (c/ 13º e Férias)" value={(dadosAnuais.salarioLiquido * 12) + (4 * (dadosAnuais.salarioBruto - dadosAnuais.vi - ) / 3) - (25 * valorVIDiaria)} isTotal={true} />
+                    <DetailRow label="Líquido Anual (c/ 13º e Férias)" value={(dadosAnuais.salarioLiquido * 12) + (4 * (dadosAnuais.salarioBruto - dadosAnuais.vi - dadosAnuais.descontoRPPS - dadosAnuais.descontoIR) / 3) - (25 * valorVIDiaria)} isTotal={true} />
                 </div>
             </div>
         </Card>
