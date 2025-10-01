@@ -10,6 +10,7 @@ const About = () => (
         <p className="mb-4">Este simulador foi desenvolvido para fornecer uma ferramenta interativa e visual para a análise e projeção de cenários de remuneração da carreira de Auditor Fiscal da Receita Estadual de Minas Gerais (SEF/MG).</p>
         <p className="mb-4">O objetivo é permitir que os usuários, sejam eles atuais servidores, aprovados em concursos ou interessados na carreira, possam comparar diferentes trajetórias e premissas de reajuste, entendendo o impacto de cada variável na remuneração líquida ao longo do tempo.</p>
         <p className="font-bold text-red-600 dark:text-red-400">Disclaimer: Os cálculos são baseados em valores e alíquotas de referência, que podem não corresponder exatamente à legislação vigente. Esta é uma ferramenta de simulação e não deve ser utilizada para fins oficiais.</p>
+        <p className="italic mt-6">Desenvolvido por Ayrton Amaral Mendonça e Rafael Nobre Leite.</p>
     </div>
 );
 

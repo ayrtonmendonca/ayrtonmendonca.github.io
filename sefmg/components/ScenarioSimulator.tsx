@@ -99,7 +99,7 @@ const simuladorCenario: React.FC = () => {
                         salarioBaseInicial: 28085.21,
                         pontosGEPI: 0,
                         valorVIDiaria: 179.58,
-                        repique: false
+                        repique: true
                     }
                 },
                 {
@@ -248,7 +248,7 @@ const simuladorCenario: React.FC = () => {
                 defineAnoSelecionado={defineAnoSelecionado}
             />
 
-            <DetalhesCalculo cenario={cenarioSelecionado || null} dadosAnuais={anoSelecionadoData || null} year={anoSelecionado} />
+            <DetalhesCalculo cenario={cenarioSelecionado || null} dadosAnuais={anoSelecionadoData || null} ano={anoSelecionado} />
         </div>
     );
 };
