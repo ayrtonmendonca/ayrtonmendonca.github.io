@@ -90,4 +90,23 @@ export const DEDUCAO_POR_DEPENDENTE = 189.59;
 export const ANO_INGRESSO_PADRAO = 2024;
 export const ULTIMA_PROGRESSAO_PADRAO = null;
 export const ULTIMA_PROMOCAO_PADRAO = null;
-export const NIVEL_PADRAO = 'I-A';
+export const POSICAO_CARREIRA_PADRAO = 'I-A';
+export const REPIQUE_PADRAO = true;
+
+export const PARAMETROS_GLOBAIS_PADRAO = {
+  posicaoCarreira: POSICAO_CARREIRA_PADRAO,
+  anoIngresso: ANO_INGRESSO_PADRAO,
+  valorPontoGEPI: VALOR_PONTO_GEPI,
+  RGAMedio: 0,
+  crescimentoGEPIMedio: 0,
+  tetoGEPI: TETO_GEPI,
+  tetoServidorPublico: TETO_SERVIDOR_PUBLICO,
+  dependentes: 0,
+  diasTrabalhados: 20,
+  prevcom: true,
+  percentualDeContribuicaoDaPrevcom: PERCENTUAL_PREVCOM_PADRAO,
+  filiadoAoSindicato: false,
+  anosProjecao: 35,
+  ultimaPromocao: null,
+  ultimaProgressao: null
+};

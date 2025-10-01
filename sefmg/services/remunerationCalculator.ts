@@ -1,5 +1,6 @@
 import {
     Cenario,
+    parametrosGlobais,
     dadosAnuais,
     detalhamentoMensal
 } from '../types';
@@ -91,27 +92,31 @@ const calcularADE = (anosNoServico: number): number => {
     return adeEncontrado ? adeEncontrado.valor : 0;
 };
 
-export const calcularPorAno = (cenario: Cenario, anoFuturo: number): detalhamentoMensal => {
-    console.log(cenario.parametros);
+export const calcularPorAno = (parametrosGlobais: parametrosGlobais, cenario: Cenario, anoFuturo: number): detalhamentoMensal => {
+    const {
+        valorVIDiaria,
+        salarioBaseInicial,
+        repique,
+        pontosGEPI,
+    } = cenario.parametros;
+
     const {
         posicaoCarreira,
-        dependentes,
-        diasTrabalhados,
+        anoIngresso,
+        ultimaPromocao,
+        ultimaProgressao,
         RGAMedio,
         crescimentoGEPIMedio,
+        valorPontoGEPI,
+        diasTrabalhados,
         tetoGEPI,
         tetoServidorPublico,
-        valorVIDiaria,
-        pontosGEPI,
-        salarioBaseSobreposto,
-        valorPontoGEPI,
         filiadoAoSindicato,
         prevcom,
         percentualDeContribuicaoDaPrevcom,
-        anoIngresso,
-        ultimaPromocao,
-        ultimaProgressao
-    } = cenario.parametros;
+        dependentes } = parametrosGlobais;
+
+        console.log(parametrosGlobais)
 
     // Determine dynamic values for the given year
     //posicaoAtual: string, anosNoServico: number, ultimaPromocao: number, ultimaProgressao: number, anoFuturo: number
@@ -123,7 +128,7 @@ export const calcularPorAno = (cenario: Cenario, anoFuturo: number): detalhament
 
     // Calculate components
     const salarioBaseParaPosicaoEfetiva = (VENCIMENTO_BASICO.calcularVB(posicaoEfetiva) || 0);
-    const fatorMultiplicacao = salarioBaseSobreposto / VENCIMENTO_BASICO.calcularVB(posicaoCarreira);
+    const fatorMultiplicacao = salarioBaseInicial / VENCIMENTO_BASICO.calcularVB('I-A');
     const salarioBaseParaPosicaoEfetivaCorrigido = salarioBaseParaPosicaoEfetiva * fatorMultiplicacao;
 
     const reajusteRGA = (1 + (RGAMedio / 100)) ** anoFuturo;
@@ -143,7 +148,7 @@ export const calcularPorAno = (cenario: Cenario, anoFuturo: number): detalhament
     const rendaTributavel = salarioBase + gepi + ade - abateTetoGepi - abateTetoServidorPublico;
 
     const descontoSindifisco = filiadoAoSindicato ? (VENCIMENTO_BASICO.calcularVB('I-A') + Math.min(gepi, tetoGEPI * VENCIMENTO_BASICO.calcularVB('II-J'))) * 0.01 : 0;
-    
+
     // Pension Calculations
     let descontoRPPS = 0;
     let descontoPrevcom = 0;
@@ -165,29 +170,29 @@ export const calcularPorAno = (cenario: Cenario, anoFuturo: number): detalhament
 
     const salarioLiquido = salarioBruto - descontoRPPS - descontoPrevcom - descontoIR - descontoSindifisco - abateTetoGepi - abateTetoServidorPublico;
 
-    
+/*
     console.log([
-        {posicaoEfetiva},
-        {percentualADE},
-        {salarioBaseParaPosicaoEfetiva},
-        {fatorMultiplicacao},
-        {salarioBaseParaPosicaoEfetivaCorrigido},
-        {reajusteRGA},
-        {pontoGEPIAjustado},
-        {salarioBase},
-        {ade},
-        {gepi},
-        {vi},
-        {abateTetoGepi},
-        {abateTetoServidorPublico},
-        {rendaTributavel},
-        {salarioBruto},
-        {descontoSindifisco},
-        {descontoRPPS},
-        {deducaoDependentes},
-        {irBaseDeCalculo},
-        {descontoIR},
-        {salarioLiquido}
+        { posicaoEfetiva },
+        { percentualADE },
+        { salarioBaseParaPosicaoEfetiva },
+        { fatorMultiplicacao },
+        { salarioBaseParaPosicaoEfetivaCorrigido },
+        { reajusteRGA },
+        { pontoGEPIAjustado },
+        { salarioBase },
+        { ade },
+        { gepi },
+        { vi },
+        { abateTetoGepi },
+        { abateTetoServidorPublico },
+        { rendaTributavel },
+        { salarioBruto },
+        { descontoSindifisco },
+        { descontoRPPS },
+        { deducaoDependentes },
+        { irBaseDeCalculo },
+        { descontoIR },
+        { salarioLiquido }
     ]);
 
     console.log({
@@ -204,9 +209,9 @@ export const calcularPorAno = (cenario: Cenario, anoFuturo: number): detalhament
         descontoSindifisco,
         abateTetoGepi,
         abateTeto: abateTetoServidorPublico,
-        posicaoCarreira: posicaoEfetiva    
+        posicaoCarreira: posicaoEfetiva
     });
-
+*/
     return {
         salarioBruto,
         salarioLiquido,
@@ -222,17 +227,17 @@ export const calcularPorAno = (cenario: Cenario, anoFuturo: number): detalhament
         descontoSindifisco,
         abateTetoGepi,
         abateTeto: abateTetoServidorPublico,
-        posicaoCarreira: posicaoEfetiva    
+        posicaoCarreira: posicaoEfetiva
     };
 };
 
 
-export const calcularProjecaoAnual = (cenario: Cenario, anos: number): dadosAnuais[] => {
+export const calcularProjecaoAnual = (parametrosGlobais: parametrosGlobais, cenario: Cenario): dadosAnuais[] => {
     const projecao: dadosAnuais[] = [];
     const anoAtual = new Date().getFullYear();
 
-    for (let i = 0; i < anos; i++) {
-        const resultadosAnuais = calcularPorAno(cenario, i);
+    for (let i = 0; i < parametrosGlobais.anosProjecao; i++) {
+        const resultadosAnuais = calcularPorAno(parametrosGlobais, cenario, i);
         projecao.push({
             ano: anoAtual + i,
             ...resultadosAnuais,
