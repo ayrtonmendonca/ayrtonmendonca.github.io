@@ -93,6 +93,7 @@ export const ULTIMA_PROMOCAO_PADRAO = null;
 export const POSICAO_CARREIRA_PADRAO = 'I-A';
 export const REPIQUE_PADRAO = true;
 export const CRESCIMENTO_GEPI_MEDIO_PADRAO = 4;
+export const INFLACAO_MEDIA_PADRAO = 3.5;
 
 export const PARAMETROS_GLOBAIS_PADRAO = {
   posicaoCarreira: POSICAO_CARREIRA_PADRAO,
@@ -109,5 +110,6 @@ export const PARAMETROS_GLOBAIS_PADRAO = {
   filiadoAoSindicato: false,
   anosProjecao: 35,
   ultimaPromocao: null,
-  ultimaProgressao: null
+  ultimaProgressao: null,
+  inflacaoMedia: INFLACAO_MEDIA_PADRAO
 };

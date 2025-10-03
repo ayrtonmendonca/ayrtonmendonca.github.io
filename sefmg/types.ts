@@ -1,6 +1,6 @@
 export interface parametrosDeCenario {
     valorVIDiaria: number;
-    salarioBaseInicial: number;
+    vencimentoBasicoInicial: number;
     repique: boolean;
     pontosGEPI: number;
 }
@@ -21,6 +21,7 @@ export interface parametrosGlobais {
     anoIngresso: number;
     ultimaPromocao: number;
     ultimaProgressao: number;
+    inflacaoMedia: number; // NOVO parâmetro
 }
 
 export interface Cenario {
@@ -31,10 +32,10 @@ export interface Cenario {
 }
 
 export interface detalhamentoMensal {
-    salarioBruto: number;
-    salarioLiquido: number;
-    salarioBase: number;
-    rendaTributavel: number;
+    remuneracaoBruta: number;
+    remuneracaoLiquida: number;
+    vencimentoBasico: number;
+    remuneracaoTributavel: number;
     gepi: number;
     valorPontoGEPI: number;
     vi: number;
@@ -48,13 +49,18 @@ export interface detalhamentoMensal {
     posicaoCarreira: string;
     percentualADE: number;
     diasTrabalhados: number;
+    tetoGEPICorrigido: number;
+    tetoServidorPublicoCorrigido: number;
+    vencimentoBasicoFinalCorrigido: number;
+    vencimentoBasicoInicialCorrigido: number;
+    inflacaoAcumulada: number;
 }
 
 export interface dadosAnuais extends detalhamentoMensal {
     ano: number;
-    salarioLiquido: number;
-    salarioBruto: number;
-    salarioTributavel: number;
+    remuneracaoLiquida: number;
+    remuneracaoBruta: number;
+    remuneracaoTributavel: number;
 }
 
 export interface dadosGrafico {

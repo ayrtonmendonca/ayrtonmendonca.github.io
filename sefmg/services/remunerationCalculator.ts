@@ -19,20 +19,23 @@ import {
     TETO_SERVIDOR_PUBLICO
 } from '../constants';
 
-const calcularRPPS = (baseDeCalculo: number): number => {
-
+const calcularRPPS = (baseDeCalculo: number, fatorInflacao: number = 1): number => {
     for (const faixa of FAIXAS_PENSAO) {
-        if (baseDeCalculo <= faixa.limite) {
-            return baseDeCalculo * faixa.taxa - faixa.deducao;
+        const limiteCorrigido = faixa.limite * fatorInflacao;
+        const deducaoCorrigida = faixa.deducao * fatorInflacao;
+        if (baseDeCalculo <= limiteCorrigido) {
+            return baseDeCalculo * faixa.taxa - deducaoCorrigida;
         }
     }
     return 0; // Should not be reached
 };
 
-const calcularIR = (salarioBase: number): number => {
+const calcularIR = (vencimentoBasico: number, fatorInflacao: number = 1): number => {
     for (const faixa of FAIXAS_IR) {
-        if (salarioBase <= faixa.limite) {
-            return salarioBase * faixa.taxa - faixa.deducao;
+        const limiteCorrigido = faixa.limite * fatorInflacao;
+        const deducaoCorrigida = faixa.deducao * fatorInflacao;
+        if (vencimentoBasico <= limiteCorrigido) {
+            return vencimentoBasico * faixa.taxa - deducaoCorrigida;
         }
     }
     return 0; // Should not be reached
@@ -93,9 +96,15 @@ const calcularADE = (anosNoServico: number): number => {
 };
 
 export const calcularPorAno = (parametrosGlobais: parametrosGlobais, cenario: Cenario, anoFuturo: number): detalhamentoMensal => {
+    // Inflação acumulada até o ano
+    let inflacaoAcumulada = null;
+    if (typeof parametrosGlobais.inflacaoMedia === 'number') {
+        inflacaoAcumulada = ((1 + parametrosGlobais.inflacaoMedia / 100) ** anoFuturo - 1) * 100;
+    }
+
     const {
         valorVIDiaria,
-        salarioBaseInicial,
+        vencimentoBasicoInicial,
         repique,
         pontosGEPI,
     } = cenario.parametros;
@@ -114,41 +123,51 @@ export const calcularPorAno = (parametrosGlobais: parametrosGlobais, cenario: Ce
         filiadoAoSindicato,
         prevcom,
         percentualDeContribuicaoDaPrevcom,
-        dependentes } = parametrosGlobais;
+        dependentes,
+        inflacaoMedia
+    } = parametrosGlobais;
 
-        console.log(parametrosGlobais)
+    console.log()
+
+    // Calcula inflação acumulada até o ano em questão
 
     // Determine dynamic values for the given year
     //posicaoAtual: string, anosNoServico: number, ultimaPromocao: number, ultimaProgressao: number, anoFuturo: number
+
+    // Calcula inflação acumulada até o ano em questão
 
     const posicaoEfetiva = calcularPosicao(posicaoCarreira, anoIngresso, ultimaPromocao, ultimaProgressao, anoFuturo);
     let anoAtual = new Date().getFullYear();
 
     const percentualADE = calcularADE(anoAtual + anoFuturo - anoIngresso);
 
-    // Calculate components
-    const salarioBaseParaPosicaoEfetiva = (VENCIMENTO_BASICO.calcularVB(posicaoEfetiva) || 0);
-
-    const fatorMultiplicacao = salarioBaseInicial / VENCIMENTO_BASICO.calcularVB('I-A');
-    const fatorSoma = salarioBaseInicial - VENCIMENTO_BASICO.calcularVB('I-A');
-
-    const salarioBaseParaPosicaoEfetivaCorrigido = repique ? salarioBaseParaPosicaoEfetiva * fatorMultiplicacao : salarioBaseParaPosicaoEfetiva + fatorSoma;
-
     const reajusteRGA = (1 + (RGAMedio / 100)) ** anoFuturo;
     const reajusteGEPI = (1 + (crescimentoGEPIMedio / 100)) ** anoFuturo;
+    const fatorInflacao = (1 + (inflacaoMedia / 100)) ** anoFuturo;
+
+    const tetoServidorPublicoCorrigido = tetoServidorPublico * fatorInflacao;
+
+    // Calculate components
+    const vencimentoBasicoParaPosicaoEfetiva = (VENCIMENTO_BASICO.calcularVB(posicaoEfetiva) || 0);
+
+    const fatorMultiplicacao = vencimentoBasicoInicial / VENCIMENTO_BASICO.calcularVB('I-A');
+    const fatorSoma = vencimentoBasicoInicial - VENCIMENTO_BASICO.calcularVB('I-A');
+
+    const vencimentoBasicoParaPosicaoEfetivaCorrigido = repique ? vencimentoBasicoParaPosicaoEfetiva * fatorMultiplicacao : vencimentoBasicoParaPosicaoEfetiva + fatorSoma;
+    const vencimentoBasicoFinalCorrigido = (repique ? VENCIMENTO_BASICO.calcularVB('II-J') * fatorMultiplicacao : VENCIMENTO_BASICO.calcularVB('II-J') + fatorSoma) * reajusteRGA;
+    const vencimentoBasicoInicialCorrigido = vencimentoBasicoInicial * reajusteRGA;
 
     const pontoGEPIAjustado = valorPontoGEPI * reajusteRGA * reajusteGEPI;
-
-    const salarioBase = salarioBaseParaPosicaoEfetivaCorrigido * reajusteRGA;
-    const ade = salarioBase * percentualADE;
+    const vencimentoBasico = vencimentoBasicoParaPosicaoEfetivaCorrigido * reajusteRGA;
+    const ade = vencimentoBasico * percentualADE;
     const gepi = pontosGEPI * pontoGEPIAjustado;
     const vi = diasTrabalhados * valorVIDiaria;
-    const abateTetoGepi = Math.max(gepi - tetoGEPI * VENCIMENTO_BASICO.calcularVB('II-J'), 0);
+    const abateTetoGepi = Math.max(gepi - tetoGEPI * vencimentoBasicoFinalCorrigido, 0);
     const gepiEfetiva = gepi - abateTetoGepi;
-    const abateTetoServidorPublico = Math.max((salarioBase + gepiEfetiva + ade) - tetoServidorPublico, 0);
+    const abateTetoServidorPublico = Math.max((vencimentoBasico + gepiEfetiva + ade) - tetoServidorPublicoCorrigido, 0);
 
-    const salarioBruto = salarioBase + gepi + ade + vi;
-    const rendaTributavel = salarioBase + gepi + ade - abateTetoGepi - abateTetoServidorPublico;
+    const remuneracaoBruta = vencimentoBasico + gepi + ade + vi;
+    const remuneracaoTributavel = vencimentoBasico + gepi + ade - abateTetoGepi - abateTetoServidorPublico;
 
     const descontoSindifisco = filiadoAoSindicato ? (VENCIMENTO_BASICO.calcularVB('I-A') + Math.min(gepi, tetoGEPI * VENCIMENTO_BASICO.calcularVB('II-J'))) * 0.01 : 0;
 
@@ -157,69 +176,69 @@ export const calcularPorAno = (parametrosGlobais: parametrosGlobais, cenario: Ce
     let descontoPrevcom = 0;
 
     if (prevcom) {
-        const baseRPPS = Math.min(rendaTributavel, TETO_RGPS);
-        descontoRPPS = calcularRPPS(baseRPPS);
+        const baseRPPS = Math.min(remuneracaoTributavel, TETO_RGPS * fatorInflacao);
+        descontoRPPS = calcularRPPS(baseRPPS, fatorInflacao);
 
-        const prevcomBase = Math.max(0, rendaTributavel - TETO_RGPS);
+        const prevcomBase = Math.max(0, remuneracaoTributavel - TETO_RGPS * fatorInflacao);
         descontoPrevcom = prevcomBase * (percentualDeContribuicaoDaPrevcom / 100);
     } else {
-        descontoRPPS = calcularRPPS(rendaTributavel);
+        descontoRPPS = calcularRPPS(remuneracaoTributavel, fatorInflacao);
     }
 
     const deducaoDependentes = dependentes * DEDUCAO_POR_DEPENDENTE;
-    const irBaseDeCalculo = rendaTributavel - descontoRPPS - deducaoDependentes;
+    const irBaseDeCalculo = remuneracaoTributavel - descontoRPPS - deducaoDependentes;
+    console.log()
+    const descontoIR = calcularIR(Math.max(0, irBaseDeCalculo), fatorInflacao);
 
-    const descontoIR = calcularIR(Math.max(0, irBaseDeCalculo));
+    const remuneracaoLiquida = remuneracaoBruta - descontoRPPS - descontoPrevcom - descontoIR - descontoSindifisco - abateTetoGepi - abateTetoServidorPublico;
 
-    const salarioLiquido = salarioBruto - descontoRPPS - descontoPrevcom - descontoIR - descontoSindifisco - abateTetoGepi - abateTetoServidorPublico;
-
-/*
-    console.log([
-        { posicaoEfetiva },
-        { percentualADE },
-        { salarioBaseParaPosicaoEfetiva },
-        { fatorMultiplicacao },
-        { salarioBaseParaPosicaoEfetivaCorrigido },
-        { reajusteRGA },
-        { pontoGEPIAjustado },
-        { salarioBase },
-        { ade },
-        { gepi },
-        { vi },
-        { abateTetoGepi },
-        { abateTetoServidorPublico },
-        { rendaTributavel },
-        { salarioBruto },
-        { descontoSindifisco },
-        { descontoRPPS },
-        { deducaoDependentes },
-        { irBaseDeCalculo },
-        { descontoIR },
-        { salarioLiquido }
-    ]);
-
-    console.log({
-        salarioBruto,
-        salarioLiquido,
-        salarioBase,
-        gepi,
-        valorPontoGEPI: pontoGEPIAjustado,
-        vi,
-        ade,
-        descontoRPPS,
-        descontoPrevcom,
-        descontoIR,
-        descontoSindifisco,
-        abateTetoGepi,
-        abateTeto: abateTetoServidorPublico,
-        posicaoCarreira: posicaoEfetiva
-    });
-*/
+    /*
+        console.log([
+            { posicaoEfetiva },
+            { percentualADE },
+            { vencimentoBasicoParaPosicaoEfetiva },
+            { fatorMultiplicacao },
+            { vencimentoBasicoParaPosicaoEfetivaCorrigido },
+            { reajusteRGA },
+            { pontoGEPIAjustado },
+            { vencimentoBasico },
+            { ade },
+            { gepi },
+            { vi },
+            { abateTetoGepi },
+            { abateTetoServidorPublico },
+            { remuneracaoTributavel },
+            { remuneracaoBruta },
+            { descontoSindifisco },
+            { descontoRPPS },
+            { deducaoDependentes },
+            { irBaseDeCalculo },
+            { descontoIR },
+            { remuneracaoLiquida }
+        ]);
+    
+        console.log({
+            remuneracaoBruta,
+            remuneracaoLiquida,
+            vencimentoBasico,
+            gepi,
+            valorPontoGEPI: pontoGEPIAjustado,
+            vi,
+            ade,
+            descontoRPPS,
+            descontoPrevcom,
+            descontoIR,
+            descontoSindifisco,
+            abateTetoGepi,
+            abateTeto: abateTetoServidorPublico,
+            posicaoCarreira: posicaoEfetiva
+        });
+    */
     return {
-        salarioBruto,
-        salarioLiquido,
-        salarioBase,
-        rendaTributavel,
+        remuneracaoBruta,
+        remuneracaoLiquida,
+        vencimentoBasico,
+        remuneracaoTributavel,
         gepi,
         valorPontoGEPI: pontoGEPIAjustado,
         vi,
@@ -232,7 +251,12 @@ export const calcularPorAno = (parametrosGlobais: parametrosGlobais, cenario: Ce
         descontoSindifisco,
         abateTetoGepi,
         abateTeto: abateTetoServidorPublico,
-        posicaoCarreira: posicaoEfetiva
+        posicaoCarreira: posicaoEfetiva,
+        tetoGEPICorrigido: tetoGEPI * vencimentoBasicoFinalCorrigido,
+        tetoServidorPublicoCorrigido,
+        vencimentoBasicoFinalCorrigido,
+        vencimentoBasicoInicialCorrigido,
+        inflacaoAcumulada: (fatorInflacao - 1)
     };
 };
 
@@ -245,7 +269,7 @@ export const calcularProjecaoAnual = (parametrosGlobais: parametrosGlobais, cena
         const resultadosAnuais = calcularPorAno(parametrosGlobais, cenario, i);
         projecao.push({
             ano: anoAtual + i,
-            ...resultadosAnuais,
+            ...resultadosAnuais
         });
     }
 

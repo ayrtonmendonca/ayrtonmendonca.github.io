@@ -32,7 +32,7 @@ const ControleCenario: React.FC<propriedadesControleCenario> = ({
     const [parametrosCenarioAtuais, defineParametrosCenarioAtuais] =
         useState<parametrosDeCenario>({
             valorVIDiaria: VALOR_DIARIO_VI,
-            salarioBaseInicial: VENCIMENTO_BASICO.calcularVB('I-A'),
+            vencimentoBasicoInicial: VENCIMENTO_BASICO.calcularVB('I-A'),
             pontosGEPI: PONTOS_GEPI
         });
 
@@ -50,9 +50,9 @@ const ControleCenario: React.FC<propriedadesControleCenario> = ({
 
     const gerenciarSalvamento = () => {
         // Validação de campos obrigatórios
-        const { salarioBaseInicial, pontosGEPI, valorVIDiaria } = parametrosCenarioAtuais;
+        const { vencimentoBasicoInicial, pontosGEPI, valorVIDiaria } = parametrosCenarioAtuais;
         if (
-            salarioBaseInicial === undefined || salarioBaseInicial <= 0 ||
+            vencimentoBasicoInicial === undefined || vencimentoBasicoInicial <= 0 ||
             pontosGEPI === undefined || pontosGEPI < 0 ||
             valorVIDiaria === undefined || valorVIDiaria <= 0
         ) {
@@ -86,7 +86,7 @@ const ControleCenario: React.FC<propriedadesControleCenario> = ({
         defineNomeCenario(`Cenário ${cenarios.length + 1}`);
         defineParametrosCenarioAtuais({
             valorVIDiaria: VALOR_DIARIO_VI,
-            salarioBaseInicial: VENCIMENTO_BASICO.calcularVB('I-A'),
+            vencimentoBasicoInicial: VENCIMENTO_BASICO.calcularVB('I-A'),
             pontosGEPI: PONTOS_GEPI,
             repique: true
         });
@@ -113,7 +113,7 @@ const ControleCenario: React.FC<propriedadesControleCenario> = ({
                         Cenários Ativos
                     </h3>
                     <div className="flex items-center space-x-2">
-                        <Button onClick={() => {
+                        <Button variant="secondary" onClick={() => {
                             reiniciarFormulario();
                             setAbrirModal(true);
                         }}>
@@ -138,11 +138,12 @@ const ControleCenario: React.FC<propriedadesControleCenario> = ({
                                     <span className="font-semibold">{s.nome}</span>
                                 </div>
                                 <span className="text-xs text-gray-600 dark:text-gray-300 mt-1 ml-7">
-                                    VB Inicial: R$ {s.parametros.salarioBaseInicial.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | GEPI: {s.parametros.pontosGEPI.toLocaleString('pt-BR')} pts | VI: R$ {s.parametros.valorVIDiaria.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Repique: {s.parametros.repique ? 'Sim' : 'Não'}
+                                    VB Inicial: R$ {s.parametros.vencimentoBasicoInicial.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | GEPI: {s.parametros.pontosGEPI.toLocaleString('pt-BR')} pts | VI: R$ {s.parametros.valorVIDiaria.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Repique: {s.parametros.repique ? 'Sim' : 'Não'}
                                 </span>
                             </div>
                             <div className="space-x-2">
                                 <Button
+                                    variant="secondary"
                                     onClick={() => gerenciarEdicao(s)}
                                     className="px-2 py-1 text-xs"
                                 >
@@ -178,15 +179,15 @@ const ControleCenario: React.FC<propriedadesControleCenario> = ({
 
                     <Input
                         label="Vencimento Básico Inicial"
-                        id="salarioBaseInicial"
+                        id="vencimentoBasicoInicial"
                         type="number"
                         step="0.01"
                         prefix="R$"
-                        value={parametrosCenarioAtuais.salarioBaseInicial}
+                        value={parametrosCenarioAtuais.vencimentoBasicoInicial}
                         onChange={(e) =>
                             defineParametrosCenarioAtuais((p) => ({
                                 ...p,
-                                salarioBaseInicial: parseFloat(e.target.value) || 0,
+                                vencimentoBasicoInicial: parseFloat(e.target.value) || 0,
                             }))
                         }
                     />

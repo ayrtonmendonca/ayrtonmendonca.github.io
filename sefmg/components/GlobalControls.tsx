@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { parametrosGlobais } from '../types';
-import { POSICAO_CARREIRA, POSICAO_CARREIRA_PADRAO, ANO_INGRESSO_PADRAO, VALOR_PONTO_GEPI, TETO_SERVIDOR_PUBLICO, PERCENTUAL_PREVCOM_PADRAO, TETO_GEPI, CRESCIMENTO_GEPI_MEDIO_PADRAO } from '../constants';
+import { POSICAO_CARREIRA, POSICAO_CARREIRA_PADRAO, ANO_INGRESSO_PADRAO, VALOR_PONTO_GEPI, TETO_SERVIDOR_PUBLICO, PERCENTUAL_PREVCOM_PADRAO, TETO_GEPI, CRESCIMENTO_GEPI_MEDIO_PADRAO, INFLACAO_MEDIA_PADRAO } from '../constants';
 import Card from './ui/Card';
 import Input from './ui/Input';
 import Select from './ui/Select';
@@ -30,8 +30,9 @@ const parametrosGlobaisPadrao: parametrosGlobais = {
     percentualDeContribuicaoDaPrevcom: PERCENTUAL_PREVCOM_PADRAO,
     filiadoAoSindicato: false,
     anosProjecao: 35,
-    ultimaPromocao: null,
-    ultimaProgressao: null
+    ultimaPromocao: ANO_INGRESSO_PADRAO,
+    ultimaProgressao: ANO_INGRESSO_PADRAO,
+    inflacaoMedia: INFLACAO_MEDIA_PADRAO
 };
 
 const ControleGlobal: React.FC<propriedadesControleGlobal> = ({ parametrosGlobais, defineParametrosGlobais }) => {
@@ -41,7 +42,9 @@ const ControleGlobal: React.FC<propriedadesControleGlobal> = ({ parametrosGlobai
         if (salvos) {
             try {
                 const obj = JSON.parse(salvos);
-                defineParametrosGlobais({ ...parametrosGlobais, ...obj });
+                // Merge profundo: para cada campo, se não existir em obj, usa o padrão
+                const merged = { ...parametrosGlobaisPadrao, ...obj };
+                defineParametrosGlobais(merged);
             } catch {
                 console.warn("Erro ao carregar parametrosGlobais do localStorage");
                 defineParametrosGlobais(parametrosGlobaisPadrao);
@@ -65,20 +68,22 @@ const ControleGlobal: React.FC<propriedadesControleGlobal> = ({ parametrosGlobai
     return (
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
             <Card className="lg:col-span-1">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Parâmetros Globais</h3>
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        className="text-xs px-3 py-1"
-                        onClick={e => {
-                            defineParametrosGlobais(parametrosGlobaisPadrao);
-                            if (e && e.currentTarget) e.currentTarget.blur();
-                        }}
-                        title="Reiniciar para os valores padrão"
-                    >
-                        Reiniciar Parâmetros
-                    </Button>
+                <div className="flex flex-col gap-1 mb-4">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Parâmetros Globais</h3>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            className="text-xs px-3 py-1"
+                            onClick={e => {
+                                defineParametrosGlobais(parametrosGlobaisPadrao);
+                                if (e && e.currentTarget) e.currentTarget.blur();
+                            }}
+                            title="Reiniciar para os valores padrão"
+                        >
+                            Reiniciar Parâmetros
+                        </Button>
+                    </div>
                 </div>
                 {/* Grid de inputs */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -103,6 +108,43 @@ const ControleGlobal: React.FC<propriedadesControleGlobal> = ({ parametrosGlobai
                         min="0"
                         value={parametrosGlobais.anoIngresso}
                         onChange={(e) => defineParametrosGlobais(p => ({ ...p, anoIngresso: parseInt(e.target.value) || 0 }))}
+                    />
+
+
+                    <Input
+                        label="Ano da Última Promoção"
+                        id="ultimaPromocao"
+                        type="number"
+                        min={parametrosGlobais.anoIngresso}
+                        value={parametrosGlobais.ultimaPromocao ?? parametrosGlobais.anoIngresso}
+                        onChange={e => {
+                            const valor = e.target.value;
+                            defineParametrosGlobais(p => ({ ...p, ultimaPromocao: valor === '' ? '' : parseInt(valor) }));
+                        }}
+                        onBlur={e => {
+                            const valor = parseInt(e.target.value);
+                            if (isNaN(valor) || valor < parametrosGlobais.anoIngresso) {
+                                defineParametrosGlobais(p => ({ ...p, ultimaPromocao: parametrosGlobais.anoIngresso }));
+                            }
+                        }}
+                    />
+
+                    <Input
+                        label="Ano da Última Progressão"
+                        id="ultimaProgressao"
+                        type="number"
+                        min={parametrosGlobais.anoIngresso}
+                        value={parametrosGlobais.ultimaProgressao ?? parametrosGlobais.anoIngresso}
+                        onChange={e => {
+                            const valor = e.target.value;
+                            defineParametrosGlobais(p => ({ ...p, ultimaProgressao: valor === '' ? '' : parseInt(valor) }));
+                        }}
+                        onBlur={e => {
+                            const valor = parseInt(e.target.value);
+                            if (isNaN(valor) || valor < parametrosGlobais.anoIngresso) {
+                                defineParametrosGlobais(p => ({ ...p, ultimaProgressao: parametrosGlobais.anoIngresso }));
+                            }
+                        }}
                     />
 
                     <Input
@@ -137,6 +179,16 @@ const ControleGlobal: React.FC<propriedadesControleGlobal> = ({ parametrosGlobai
                         type="number"
                         value={parametrosGlobais.tetoGEPI}
                         onChange={(e) => defineParametrosGlobais(p => ({ ...p, tetoGEPI: parseFloat(e.target.value) || 0 }))}
+                    />
+
+                    <Input
+                        label="Inflação Anual Média (%)"
+                        id="inflacaoMedia"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={parametrosGlobais.inflacaoMedia}
+                        onChange={(e) => defineParametrosGlobais(p => ({ ...p, inflacaoMedia: parseFloat(e.target.value) || 0 }))}
                     />
 
                     <Input
@@ -232,6 +284,9 @@ const ControleGlobal: React.FC<propriedadesControleGlobal> = ({ parametrosGlobai
                         className="w-24"
                     />
                 </div>
+                <span className="block text-xs text-red-700 dark:text-red-300 mt-1">
+                    Obs: Para efeitos de simulação, o Teto de Servidor Público e as faixas de desconto do IR e do RPPS são atualizados anualmente pela inflação.
+                </span>
             </Card >
         </div >
     );

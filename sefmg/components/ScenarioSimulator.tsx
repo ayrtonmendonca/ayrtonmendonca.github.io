@@ -17,42 +17,60 @@ import Card from './ui/Card';
 import Select from './ui/Select';
 
 const simuladorCenario: React.FC = () => {
+    // Helper to deeply merge scenario parameters with defaults
+    function mergeCenarioWithDefaults(cenario) {
+        return {
+            ...cenario,
+            parametros: {
+                valorVIDiaria: cenario.parametros?.valorVIDiaria ?? VALOR_DIARIO_VI,
+                pontosGEPI: cenario.parametros?.pontosGEPI ?? PONTOS_GEPI,
+                vencimentoBasicoInicial: cenario.parametros?.vencimentoBasicoInicial ?? VENCIMENTO_BASICO.calcularVB('I-A'),
+                repique: typeof cenario.parametros?.repique === 'boolean' ? cenario.parametros.repique : REPIQUE_PADRAO
+            }
+        };
+    }
+
+    function mergeParametrosGlobaisWithDefaults(pg) {
+        return {
+            ...PARAMETROS_GLOBAIS_PADRAO,
+            ...pg,
+            inflacaoMedia: typeof pg?.inflacaoMedia === 'number' ? pg.inflacaoMedia : 3.5,
+            ultimaPromocao: typeof pg?.ultimaPromocao === 'number' ? pg.ultimaPromocao : pg?.anoIngresso ?? ANO_INGRESSO_PADRAO,
+            ultimaProgressao: typeof pg?.ultimaProgressao === 'number' ? pg.ultimaProgressao : pg?.anoIngresso ?? ANO_INGRESSO_PADRAO
+        };
+    }
+
+    // Sanitize cenarios and parametrosGlobais from localStorage on load
     const [cenarios, defineCenarios] = useLocalStorage<Cenario[]>('sef-mg-cenarios', []);
-    const [parametrosGlobais, defineParametrosGlobais] = useLocalStorage<parametrosGlobais>('sef-mg-parametros-globais', PARAMETROS_GLOBAIS_PADRAO);
+    const [parametrosGlobaisRaw, defineParametrosGlobais] = useLocalStorage<parametrosGlobais>('sef-mg-parametros-globais', PARAMETROS_GLOBAIS_PADRAO);
+    const parametrosGlobais = mergeParametrosGlobaisWithDefaults(parametrosGlobaisRaw);
     const [anoSelecionado, defineAnoSelecionado] = useState<number>(new Date().getFullYear());
     const [cenarioSelecionadoID, defineCenarioSelecionadoID] = useState<string | null>(null);
     // console.log(parametrosGlobais);
     const [tipoRemuneracao, setTipoRemuneracao] = useState<'liquida' | 'bruta' | 'tributavel'>('liquida');
     // This effect runs ONCE on mount to sanitize data from localStorage, ensuring compatibility with the current app version.
+
+    // On mount, sanitize cenarios and parametrosGlobais in localStorage
     useEffect(() => {
+        let atualizou = false;
+        // Sanitize cenarios
         if (cenarios.length > 0) {
-            let precisaAtualizar = false;
-            const cenariosHigienizados = cenarios.map(s => {
-                // FIX: Explicitly type `parametrosCenarioAtuais` to handle cases where `s.parametros` might be missing from old localStorage data,
-                // and handle migration from old data structure with `gepiAdjustment`.
-                const parametrosCenarioAtuais = s.parametros;
-
-                const parametrosMigrados: parametrosDeCenario = {
-                    valorVIDiaria: parametrosCenarioAtuais.valorVIDiaria ?? VALOR_DIARIO_VI,
-                    pontosGEPI: parametrosCenarioAtuais.pontosGEPI ?? PONTOS_GEPI,
-                    salarioBaseInicial: parametrosCenarioAtuais.salarioBaseInicial ?? VENCIMENTO_BASICO.calcularVB('I-A'),
-                    repique: parametrosCenarioAtuais.repique ?? REPIQUE_PADRAO
-                };
-
-                if (JSON.stringify(s.parametros) !== JSON.stringify(parametrosMigrados)) {
-                    precisaAtualizar = true;
-                }
-
-                // console.log(parametrosMigrados);
-
-                return { ...s, parametros: parametrosMigrados };
-            });
-
-            if (precisaAtualizar) {
-                defineCenarios(cenariosHigienizados);
+            const cenariosSanitizados = cenarios.map(mergeCenarioWithDefaults);
+            if (JSON.stringify(cenariosSanitizados) !== JSON.stringify(cenarios)) {
+                defineCenarios(cenariosSanitizados);
+                atualizou = true;
             }
         }
-    }, []); // <-- IMPORTANT: Empty array means it runs only once on mount.
+        // Sanitize parametrosGlobais
+        if (parametrosGlobaisRaw) {
+            const pgSanitizado = mergeParametrosGlobaisWithDefaults(parametrosGlobaisRaw);
+            if (JSON.stringify(pgSanitizado) !== JSON.stringify(parametrosGlobaisRaw)) {
+                defineParametrosGlobais(pgSanitizado);
+                atualizou = true;
+            }
+        }
+        // If anything was updated, no further action needed (state will re-render)
+    }, []);
 
 
     useEffect(() => {
@@ -63,7 +81,7 @@ const simuladorCenario: React.FC = () => {
                     nome: 'Cenário Atual',
                     cor: PALETA_DE_CORES[0],
                     parametros: {
-                        salarioBaseInicial: 5975.21,
+                        vencimentoBasicoInicial: 5975.21,
                         pontosGEPI: 11000,
                         valorVIDiaria: 179.58,
                         repique: true
@@ -74,7 +92,7 @@ const simuladorCenario: React.FC = () => {
                     nome: 'Migração de 6.000 pts. Com Repique',
                     cor: PALETA_DE_CORES[1],
                     parametros: {
-                        salarioBaseInicial: 18035.21,
+                        vencimentoBasicoInicial: 18035.21,
                         pontosGEPI: 5000,
                         valorVIDiaria: 179.58,
                         repique: true
@@ -85,7 +103,7 @@ const simuladorCenario: React.FC = () => {
                     nome: 'Migração de 6.000 pts. Sem Repique',
                     cor: PALETA_DE_CORES[2],
                     parametros: {
-                        salarioBaseInicial: 18035.21,
+                        vencimentoBasicoInicial: 18035.21,
                         pontosGEPI: 5000,
                         valorVIDiaria: 179.58,
                         repique: false
@@ -96,7 +114,7 @@ const simuladorCenario: React.FC = () => {
                     nome: 'Migração de 11.000 pts. Com Repique',
                     cor: PALETA_DE_CORES[3],
                     parametros: {
-                        salarioBaseInicial: 28085.21,
+                        vencimentoBasicoInicial: 28085.21,
                         pontosGEPI: 0,
                         valorVIDiaria: 179.58,
                         repique: true
@@ -107,7 +125,7 @@ const simuladorCenario: React.FC = () => {
                     nome: 'Migração de 11.000 pts. Sem Repique',
                     cor: PALETA_DE_CORES[4],
                     parametros: {
-                        salarioBaseInicial: 28085.21,
+                        vencimentoBasicoInicial: 28085.21,
                         pontosGEPI: 0,
                         valorVIDiaria: 179.58,
                         repique: false
@@ -139,9 +157,9 @@ const simuladorCenario: React.FC = () => {
             cenarios.forEach(s => {
                 if (projecoes[s.id] && projecoes[s.id][index]) {
                     let valor = 0;
-                    if (tipoRemuneracao === 'liquida') valor = projecoes[s.id][index].salarioLiquido;
-                    else if (tipoRemuneracao === 'bruta') valor = projecoes[s.id][index].salarioBruto;
-                    else if (tipoRemuneracao === 'tributavel') valor = projecoes[s.id][index].rendaTributavel;
+                    if (tipoRemuneracao === 'liquida') valor = projecoes[s.id][index].remuneracaoLiquida;
+                    else if (tipoRemuneracao === 'bruta') valor = projecoes[s.id][index].remuneracaoBruta;
+                    else if (tipoRemuneracao === 'tributavel') valor = projecoes[s.id][index].remuneracaoTributavel;
                     dataPoint[s.id] = valor;
                 }
             });
@@ -193,7 +211,7 @@ const simuladorCenario: React.FC = () => {
         <div className="space-y-8">
             <h1 className="text-4xl font-bold text-center text-gray-800 dark:text-gray-100">
                 Simulador de Cenários
-                <span className="block text-xl font-normal text-primary-600 dark:text-primary-400">Auditor Fiscal SEF/MG</span>
+                <span className="block text-xl font-normal text-primary-600 dark:text-primary-400">Auditor Fiscal da Receita Estadual</span>
             </h1>
 
             <ControleCenario
