@@ -19,8 +19,11 @@ export interface parametrosGlobais {
     percentualDeContribuicaoDaPrevcom: number;
     anosProjecao: number;
     anoIngresso: number;
-    ultimaPromocao: number;
-    ultimaProgressao: number;
+    mesIngresso?: number;
+    ultimaPromocao?: number;
+    mesUltimaPromocao?: number;
+    ultimaProgressao?: number;
+    mesUltimaProgressao?: number;
     inflacaoMedia: number; // NOVO parâmetro
 }
 

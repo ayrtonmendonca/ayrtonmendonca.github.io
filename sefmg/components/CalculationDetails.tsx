@@ -6,7 +6,7 @@ import ToggleSwitch from './ui/ToggleSwitch';
 interface DetalhesCalculoPropriedades {
     cenario: Cenario | null;
     dadosAnuais: dadosAnuais | null;
-    ano: number;
+    anoMes: { ano: number, mes: number };
 }
 
 const DetailRow: React.FC<{ label: string; value: number; isTotal?: boolean; isNegative?: boolean }> = ({ label, value, isTotal = false, isNegative = false }) => (
@@ -25,7 +25,7 @@ const formatarNomePosicao = (position: string) => {
 };
 
 
-const DetalhesCalculo: React.FC<DetalhesCalculoPropriedades> = ({ cenario, dadosAnuais, ano }) => {
+const DetalhesCalculo: React.FC<DetalhesCalculoPropriedades> = ({ cenario, dadosAnuais, anoMes }) => {
     const [valorPresente, setValorPresente] = useState(false);
     // Inflação acumulada até o ano (agora vem do cálculo)
     const inflacaoAcumulada = typeof dadosAnuais?.inflacaoAcumulada === 'number' ? dadosAnuais.inflacaoAcumulada : null;
@@ -33,7 +33,7 @@ const DetalhesCalculo: React.FC<DetalhesCalculoPropriedades> = ({ cenario, dados
     if (!cenario || !dadosAnuais) {
         return (
             <Card className="text-center">
-                <p className="text-gray-500 dark:text-gray-400">Selecione um cenário e um ano para ver o detalhamento do cálculo.</p>
+                <p className="text-gray-500 dark:text-gray-400">Selecione um cenário e um ano/mês para ver o detalhamento do cálculo.</p>
             </Card>
         );
     }
@@ -59,7 +59,7 @@ const DetalhesCalculo: React.FC<DetalhesCalculoPropriedades> = ({ cenario, dados
     return (
         <Card>
             <h3 className="text-xl font-bold mb-4">
-                Detalhamento do Cálculo: <span style={{ color: cenario.cor }}>{cenario.nome}</span> - Ano {ano}
+                Detalhamento do Cálculo: <span style={{ color: cenario.cor }}>{cenario.nome}</span> - {anoMes.ano}/{anoMes.mes.toString().padStart(2, '0')}
             </h3>
             <div className="mb-4 flex items-center gap-4">
                 <ToggleSwitch

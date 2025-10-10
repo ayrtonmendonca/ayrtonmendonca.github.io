@@ -44,7 +44,10 @@ const simuladorCenario: React.FC = () => {
     const [cenarios, defineCenarios] = useLocalStorage<Cenario[]>('sef-mg-cenarios', []);
     const [parametrosGlobaisRaw, defineParametrosGlobais] = useLocalStorage<parametrosGlobais>('sef-mg-parametros-globais', PARAMETROS_GLOBAIS_PADRAO);
     const parametrosGlobais = mergeParametrosGlobaisWithDefaults(parametrosGlobaisRaw);
-    const [anoSelecionado, defineAnoSelecionado] = useState<number>(new Date().getFullYear());
+    const [anoSelecionado, defineAnoSelecionado] = useState<{ano: number, mes: number}>({
+        ano: new Date().getFullYear(),
+        mes: new Date().getMonth() + 1
+    });
     const [cenarioSelecionadoID, defineCenarioSelecionadoID] = useState<string | null>(null);
     // console.log(parametrosGlobais);
     const [tipoRemuneracao, setTipoRemuneracao] = useState<'liquida' | 'bruta' | 'tributavel'>('liquida');
@@ -149,17 +152,19 @@ const simuladorCenario: React.FC = () => {
 
 
     const dadosGrafico: dadosGrafico[] = useMemo(() => {
+
         if (cenarios.length === 0 || !projecoes[cenarios[0].id]) return [];
 
-        const anos = projecoes[cenarios[0].id].map(p => p.ano);
-        return anos.map((ano, index) => {
+        const anos = projecoes[cenarios[0].id].filter(p => p.mes == new Date().getMonth() + 1).map(p => p.ano);
+
+        return anos.map((ano) => {
             const dataPoint: dadosGrafico = { ano };
             cenarios.forEach(s => {
-                if (projecoes[s.id] && projecoes[s.id][index]) {
+                if (projecoes[s.id] && projecoes[s.id].find(p => p.ano == ano && p.mes == new Date().getMonth() + 1)) {
                     let valor = 0;
-                    if (tipoRemuneracao === 'liquida') valor = projecoes[s.id][index].remuneracaoLiquida;
-                    else if (tipoRemuneracao === 'bruta') valor = projecoes[s.id][index].remuneracaoBruta;
-                    else if (tipoRemuneracao === 'tributavel') valor = projecoes[s.id][index].remuneracaoTributavel;
+                    if (tipoRemuneracao === 'liquida') valor = projecoes[s.id].find(p => p.ano == ano && p.mes == new Date().getMonth() + 1).remuneracaoLiquida;
+                    else if (tipoRemuneracao === 'bruta') valor = projecoes[s.id].find(p => p.ano == ano && p.mes == new Date().getMonth() + 1).remuneracaoBruta;
+                    else if (tipoRemuneracao === 'tributavel') valor = projecoes[s.id].find(p => p.ano == ano && p.mes == new Date().getMonth() + 1).remuneracaoTributavel;
                     dataPoint[s.id] = valor;
                 }
             });
@@ -206,7 +211,9 @@ const simuladorCenario: React.FC = () => {
     };
 
     const cenarioSelecionado = cenarios.find(s => s.id === cenarioSelecionadoID);
-    const anoSelecionadoData = anoSelecionado && cenarioSelecionadoID && projecoes[cenarioSelecionadoID] ? projecoes[cenarioSelecionadoID].find(d => d.ano === anoSelecionado) : null;
+    const anoSelecionadoData = anoSelecionado && cenarioSelecionadoID && projecoes[cenarioSelecionadoID]
+        ? projecoes[cenarioSelecionadoID].find(d => d.ano === anoSelecionado.ano && (d.mes ? d.mes === anoSelecionado.mes : true))
+        : null;
     return (
         <div className="space-y-8">
             <h1 className="text-4xl font-bold text-center text-gray-800 dark:text-gray-100">
@@ -266,7 +273,7 @@ const simuladorCenario: React.FC = () => {
                 defineAnoSelecionado={defineAnoSelecionado}
             />
 
-            <DetalhesCalculo cenario={cenarioSelecionado || null} dadosAnuais={anoSelecionadoData || null} ano={anoSelecionado} />
+            <DetalhesCalculo cenario={cenarioSelecionado || null} dadosAnuais={anoSelecionadoData || null} anoMes={anoSelecionado} />
         </div>
     );
 };

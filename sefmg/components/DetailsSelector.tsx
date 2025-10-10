@@ -8,8 +8,8 @@ interface SelecionadorDetalhesPropriedades {
     parametrosGlobais: parametrosGlobais;
     cenarioSelecionadoID: string | null;
     defineCenarioSelecionadoID: (id: string) => void;
-    anoSelecionado: number;
-    defineAnoSelecionado: (year: number) => void;
+    anoSelecionado: { ano: number, mes: number };
+    defineAnoSelecionado: (anoMes: { ano: number, mes: number }) => void;
 }
 
 const SelecionadorDetalhes: React.FC<SelecionadorDetalhesPropriedades> = ({
@@ -21,8 +21,11 @@ const SelecionadorDetalhes: React.FC<SelecionadorDetalhesPropriedades> = ({
     defineAnoSelecionado,
 }) => {
     // console.log(parametrosGlobais);
-    const anoInicio = new Date().getFullYear();
-    const anosDisponiveis = Array.from({ length: parametrosGlobais.anosProjecao }, (_, i) => anoInicio + i);
+    // Novo: selecionador de ano/mês
+    const anoAtual = new Date().getFullYear();
+    const mesAtual = (new Date().getMonth() + 1).toString().padStart(2, '0');
+    // Estado para ano/mês selecionado
+    const valorMes = `${anoSelecionado.ano.toString().padStart(4, '0')}-${anoSelecionado.mes.toString().padStart(2, '0')}`;
 
     return (
         <Card>
@@ -42,19 +45,19 @@ const SelecionadorDetalhes: React.FC<SelecionadorDetalhesPropriedades> = ({
                         </option>
                     ))}
                 </Select>
-                <Select
-                    label="Ano"
-                    id="details-year"
-                    value={anoSelecionado}
-                    onChange={(e) => defineAnoSelecionado(parseInt(e.target.value))}
-                    aria-label="Selecionar ano para detalhes"
-                >
-                    {anosDisponiveis.map((ano) => (
-                        <option key={ano} value={ano}>
-                            {ano}
-                        </option>
-                    ))}
-                </Select>
+                <input
+                    type="month"
+                    id="details-month"
+                    value={valorMes}
+                    min="1950-01"
+                    max={`${anoAtual + parametrosGlobais.anosProjecao - 1}-12`}
+                    onChange={e => {
+                        const [ano, mes] = e.target.value.split('-');
+                        defineAnoSelecionado({ ano: parseInt(ano), mes: parseInt(mes) });
+                    }}
+                    className="border rounded px-2 py-1"
+                    aria-label="Selecionar ano e mês para detalhes"
+                />
             </div>
         </Card>
     );

@@ -102,48 +102,41 @@ const ControleGlobal: React.FC<propriedadesControleGlobal> = ({ parametrosGlobai
                     </Select>
 
                     <Input
-                        label="Ano de Ingresso"
-                        id="anoIngresso"
-                        type="number"
-                        min="0"
-                        value={parametrosGlobais.anoIngresso}
-                        onChange={(e) => defineParametrosGlobais(p => ({ ...p, anoIngresso: parseInt(e.target.value) || 0 }))}
-                    />
-
-
-                    <Input
-                        label="Ano da Última Promoção"
-                        id="ultimaPromocao"
-                        type="number"
-                        min={parametrosGlobais.anoIngresso}
-                        value={parametrosGlobais.ultimaPromocao ?? parametrosGlobais.anoIngresso}
+                        label="Ano/Mês de Ingresso"
+                        id="anoMesIngresso"
+                        type="month"
+                        min="1950-01"
+                        max={`${new Date().getFullYear()}-12`}
+                        value={`${parametrosGlobais.anoIngresso?.toString().padStart(4, '0')}-${(parametrosGlobais.mesIngresso ?? 1).toString().padStart(2, '0')}`}
                         onChange={e => {
-                            const valor = e.target.value;
-                            defineParametrosGlobais(p => ({ ...p, ultimaPromocao: valor === '' ? '' : parseInt(valor) }));
-                        }}
-                        onBlur={e => {
-                            const valor = parseInt(e.target.value);
-                            if (isNaN(valor) || valor < parametrosGlobais.anoIngresso) {
-                                defineParametrosGlobais(p => ({ ...p, ultimaPromocao: parametrosGlobais.anoIngresso }));
-                            }
+                            const [anoStr, mesStr] = e.target.value.split('-');
+                            defineParametrosGlobais(p => ({ ...p, anoIngresso: parseInt(anoStr), mesIngresso: parseInt(mesStr) }));
                         }}
                     />
 
                     <Input
-                        label="Ano da Última Progressão"
-                        id="ultimaProgressao"
-                        type="number"
-                        min={parametrosGlobais.anoIngresso}
-                        value={parametrosGlobais.ultimaProgressao ?? parametrosGlobais.anoIngresso}
+                        label="Ano/Mês da Última Promoção"
+                        id="anoMesUltimaPromocao"
+                        type="month"
+                        min={`${parametrosGlobais.anoIngresso?.toString().padStart(4, '0')}-01`}
+                        max={`${new Date().getFullYear()}-12`}
+                        value={`${(parametrosGlobais.ultimaPromocao ?? parametrosGlobais.anoIngresso)?.toString().padStart(4, '0')}-${(parametrosGlobais.mesUltimaPromocao ?? parametrosGlobais.mesIngresso ?? 1).toString().padStart(2, '0')}`}
                         onChange={e => {
-                            const valor = e.target.value;
-                            defineParametrosGlobais(p => ({ ...p, ultimaProgressao: valor === '' ? '' : parseInt(valor) }));
+                            const [anoStr, mesStr] = e.target.value.split('-');
+                            defineParametrosGlobais(p => ({ ...p, ultimaPromocao: parseInt(anoStr), mesUltimaPromocao: parseInt(mesStr) }));
                         }}
-                        onBlur={e => {
-                            const valor = parseInt(e.target.value);
-                            if (isNaN(valor) || valor < parametrosGlobais.anoIngresso) {
-                                defineParametrosGlobais(p => ({ ...p, ultimaProgressao: parametrosGlobais.anoIngresso }));
-                            }
+                    />
+
+                    <Input
+                        label="Ano/Mês da Última Progressão"
+                        id="anoMesUltimaProgressao"
+                        type="month"
+                        min={`${parametrosGlobais.anoIngresso?.toString().padStart(4, '0')}-01`}
+                        max={`${new Date().getFullYear()}-12`}
+                        value={`${(parametrosGlobais.ultimaProgressao ?? parametrosGlobais.anoIngresso)?.toString().padStart(4, '0')}-${(parametrosGlobais.mesUltimaProgressao ?? parametrosGlobais.mesIngresso ?? 1).toString().padStart(2, '0')}`}
+                        onChange={e => {
+                            const [anoStr, mesStr] = e.target.value.split('-');
+                            defineParametrosGlobais(p => ({ ...p, ultimaProgressao: parseInt(anoStr), mesUltimaProgressao: parseInt(mesStr) }));
                         }}
                     />
 

@@ -16,13 +16,12 @@ interface GraficoRemuneracaoPropriedades {
 const GraficoRemuneracao: React.FC<GraficoRemuneracaoPropriedades> = ({ data, cenarios, onDataPointClick, projecoes, tipoRemuneracao }) => {
     const [valorPresente, setValorPresente] = useState(false);
 
-
     // Deflaciona valores se valorPresente estiver ativado
     const dataComTeto = useMemo(() => {
         // Gera array com valores do teto do servidor público para cada ano
         return data.map((d, idx) => {
             // Pega o primeiro cenário para buscar a projeção do teto (todos compartilham o parâmetro global)
-            const proj = projecoes && cenarios.length > 0 && projecoes[cenarios[0].id] ? projecoes[cenarios[0].id][idx] : null;
+            const proj = projecoes && cenarios.length > 0 && projecoes[cenarios[0].id] ? projecoes[cenarios[0].id].find(p => p.ano == d.ano) : null;
             // Fator de deflação: 1 / (1 + inflacaoAcumulada)
             const inflacaoAcumulada = proj && typeof proj.inflacaoAcumulada === 'number' ? proj.inflacaoAcumulada : 0;
             const fatorDeflacao = valorPresente ? (1 / (1 + inflacaoAcumulada)) : 1;

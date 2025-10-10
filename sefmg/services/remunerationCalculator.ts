@@ -41,51 +41,88 @@ const calcularIR = (vencimentoBasico: number, fatorInflacao: number = 1): number
     return 0; // Should not be reached
 };
 
-const calcularPosicao = (posicaoAtual: string, anoIngresso: number, ultimaPromocao: number, ultimaProgressao: number, anoFuturo: number): string => {
+// Novo tipo para ano/mês
+type AnoMes = { ano: number, mes: number };
+
+function diffMeses(inicio: AnoMes, fim: AnoMes): number {
+    return (fim.ano - inicio.ano) * 12 + (fim.mes - inicio.mes);
+}
+
+function somarMeses(mes: AnoMes, mesesSomar: number): AnoMes {
+    const totalMeses = mes.ano * 12 + (mes.mes - 1) + mesesSomar;
+    const novoAno = Math.floor(totalMeses / 12);
+    const novoMes = (totalMeses % 12) + 1;
+    return { ano: novoAno, mes: novoMes };
+}
+
+const calcularPosicao = (posicaoAtual: string, anoMesIngresso: AnoMes, ultimaPromocao: AnoMes, ultimaProgressao: AnoMes, anoMesFuturo: AnoMes): string => {
     let [nivel, grau] = posicaoAtual.split("-");
     let idxNivel = NIVEL.indexOf(nivel);
     let idxGrau = GRAU.indexOf(grau);
-    let anoAtual = new Date().getFullYear();
-    ultimaPromocao = ultimaPromocao ?? anoIngresso;
-    ultimaProgressao = ultimaProgressao ?? anoIngresso;
+    let anoMesAtual = { ano: new Date().getFullYear(), mes: new Date().getMonth() + 1 };
 
-    let anosNoServico = anoAtual - anoIngresso;
-    anoFuturo = anoAtual + anoFuturo;
+    // Se não vier, assume ingresso
+    ultimaPromocao = ultimaPromocao ?? anoMesIngresso;
+    ultimaProgressao = ultimaProgressao ?? anoMesIngresso;
 
-    for (let ano = anoAtual + 1; ano <= anoFuturo; ano++) {
-        anosNoServico++;
+    // Meses de serviço desde ingresso até futuro
+    let mesesNoServico = diffMeses(anoMesIngresso, anoMesAtual);
+    let mesesNoServicoFuturo = diffMeses(anoMesAtual, anoMesFuturo);
 
-        if (anosNoServico < 3) {
-            continue;
-        }
+    //console.log(anoMesFuturo, mesesNoServico, mesesDesdePromocao, mesesDesdeProgressao);
 
-        if (ano - ultimaPromocao >= ANOS_PARA_PROMOCAO + 3) {
+    // Simula ano a ano (mês a mês, mas só avança se passou o tempo)
+    for (let i = mesesNoServico; i <= mesesNoServico + mesesNoServicoFuturo; i++) {
+        // Só considera progressão/promoção após 36 meses de serviço
+
+        if (i < 36) continue;
+
+        // Promoção: a cada ANOS_PARA_PROMOCAO anos + 3 anos de carência
+        if (diffMeses(ultimaPromocao, somarMeses(anoMesIngresso, i)) >= (ANOS_PARA_PROMOCAO + 3) * 12) {
+
             if (idxNivel < NIVEL.length - 1) {
                 idxNivel++;
-                idxGrau = 0; // volta pro grau A
-                ultimaPromocao = ano;
-                ultimaProgressao = ano; // reseta junto
+                idxGrau = 0;
+                // Atualiza datas
+                ultimaPromocao = {
+                    ano: anoMesIngresso.ano + Math.floor(i / 12),
+                    mes: ((anoMesIngresso.mes + i - 1) % 12) + 1
+                };
+                ultimaProgressao = ultimaPromocao;
                 nivel = NIVEL[idxNivel];
                 grau = GRAU[idxGrau];
-                continue; // se promoveu, não progride no mesmo ano
+                ultimaPromocao = somarMeses(anoMesIngresso, i);
+                ultimaProgressao = somarMeses(anoMesIngresso, i);
+                continue;
             }
         }
 
-        if (ano - ultimaProgressao >= ANOS_PARA_PROGRESSAO) {
+        // Progressão: a cada ANOS_PARA_PROGRESSAO anos
+        // if(anoMesFuturo.ano == 2027) console.log(ultimaProgressao, anoMesAtual, i, somarMeses(anoMesAtual, i));
+
+        if (diffMeses(ultimaProgressao, somarMeses(anoMesIngresso, i)) >= (ANOS_PARA_PROGRESSAO) * 12) {
+
             if (idxGrau < GRAU.length - 1) {
                 idxGrau++;
-                ultimaProgressao = ano;
+                ultimaProgressao = {
+                    ano: anoMesIngresso.ano + Math.floor(i / 12),
+                    mes: ((anoMesIngresso.mes + i - 1) % 12) + 1
+                };
                 nivel = NIVEL[idxNivel];
                 grau = GRAU[idxGrau];
+                ultimaProgressao = somarMeses(anoMesIngresso, i);
             }
         }
     }
-    // console.log(anoFuturo);
-    // console.log(`${NIVEL[idxNivel]}-${GRAU[idxGrau]}`);
+
+    //console.log(posicaoAtual, anoMesIngresso, ultimaPromocao, ultimaProgressao, anoMesFuturo);
     return `${NIVEL[idxNivel]}-${GRAU[idxGrau]}`;
 }
 
-const calcularADE = (anosNoServico: number): number => {
+const calcularADE = (anosNoServico: number, mes: number): number => {
+    console.log(anosNoServico, mes);
+    if (mes < 10) anosNoServico -= 1;
+
     if (anosNoServico < ADE[0].ano) {
         return 0;
     }
@@ -95,11 +132,13 @@ const calcularADE = (anosNoServico: number): number => {
     return adeEncontrado ? adeEncontrado.valor : 0;
 };
 
-export const calcularPorAno = (parametrosGlobais: parametrosGlobais, cenario: Cenario, anoFuturo: number): detalhamentoMensal => {
+export const calcularPorMes = (
+    parametrosGlobais: parametrosGlobais, cenario: Cenario, anoMesFuturo: { ano: number, mes: number }): detalhamentoMensal => {
+
     // Inflação acumulada até o ano
     let inflacaoAcumulada = null;
     if (typeof parametrosGlobais.inflacaoMedia === 'number') {
-        inflacaoAcumulada = ((1 + parametrosGlobais.inflacaoMedia / 100) ** anoFuturo - 1) * 100;
+        inflacaoAcumulada = ((1 + parametrosGlobais.inflacaoMedia / 100) ** anoMesFuturo.ano - 1) * 100;
     }
 
     const {
@@ -109,11 +148,15 @@ export const calcularPorAno = (parametrosGlobais: parametrosGlobais, cenario: Ce
         pontosGEPI,
     } = cenario.parametros;
 
+
     const {
         posicaoCarreira,
         anoIngresso,
+        mesIngresso,
         ultimaPromocao,
+        mesUltimaPromocao,
         ultimaProgressao,
+        mesUltimaProgressao,
         RGAMedio,
         crescimentoGEPIMedio,
         valorPontoGEPI,
@@ -127,23 +170,29 @@ export const calcularPorAno = (parametrosGlobais: parametrosGlobais, cenario: Ce
         inflacaoMedia
     } = parametrosGlobais;
 
-    console.log()
+    // Inputs do calendário
+    const anoMesIngresso = { ano: anoIngresso, mes: mesIngresso ?? 1 };
+    const anoMesUltimaPromocao = { ano: ultimaPromocao ?? anoIngresso, mes: mesUltimaPromocao ?? mesIngresso ?? 1 };
+    const anoMesUltimaProgressao = { ano: ultimaProgressao ?? anoIngresso, mes: mesUltimaProgressao ?? mesIngresso ?? 1 };
 
-    // Calcula inflação acumulada até o ano em questão
+    // console.log(anoMesIngresso, anoMesUltimaPromocao, anoMesUltimaProgressao, anoMesFuturo);
+    // Calcula diferença de anos para reajustes e ADE
+    const diffAnos = anoMesFuturo.ano - anoMesIngresso.ano;
 
-    // Determine dynamic values for the given year
-    //posicaoAtual: string, anosNoServico: number, ultimaPromocao: number, ultimaProgressao: number, anoFuturo: number
+    const posicaoEfetiva = calcularPosicao(
+        posicaoCarreira,
+        anoMesIngresso,
+        anoMesUltimaPromocao,
+        anoMesUltimaProgressao,
+        anoMesFuturo
+    );
 
-    // Calcula inflação acumulada até o ano em questão
+    // Usa o ano do anoMesFuturo para cálculo do ADE
+    const percentualADE = calcularADE(diffMeses(anoMesIngresso, anoMesFuturo) / 12, anoMesFuturo.mes);
 
-    const posicaoEfetiva = calcularPosicao(posicaoCarreira, anoIngresso, ultimaPromocao, ultimaProgressao, anoFuturo);
-    let anoAtual = new Date().getFullYear();
-
-    const percentualADE = calcularADE(anoAtual + anoFuturo - anoIngresso);
-
-    const reajusteRGA = (1 + (RGAMedio / 100)) ** anoFuturo;
-    const reajusteGEPI = (1 + (crescimentoGEPIMedio / 100)) ** anoFuturo;
-    const fatorInflacao = (1 + (inflacaoMedia / 100)) ** anoFuturo;
+    const reajusteRGA = (1 + (RGAMedio / 100)) ** diffAnos;
+    const reajusteGEPI = (1 + (crescimentoGEPIMedio / 100)) ** diffAnos;
+    const fatorInflacao = (1 + (inflacaoMedia / 100)) ** diffAnos;
 
     const tetoServidorPublicoCorrigido = tetoServidorPublico * fatorInflacao;
 
@@ -187,53 +236,10 @@ export const calcularPorAno = (parametrosGlobais: parametrosGlobais, cenario: Ce
 
     const deducaoDependentes = dependentes * DEDUCAO_POR_DEPENDENTE;
     const irBaseDeCalculo = remuneracaoTributavel - descontoRPPS - deducaoDependentes;
-    console.log()
     const descontoIR = calcularIR(Math.max(0, irBaseDeCalculo), fatorInflacao);
 
     const remuneracaoLiquida = remuneracaoBruta - descontoRPPS - descontoPrevcom - descontoIR - descontoSindifisco - abateTetoGepi - abateTetoServidorPublico;
 
-    /*
-        console.log([
-            { posicaoEfetiva },
-            { percentualADE },
-            { vencimentoBasicoParaPosicaoEfetiva },
-            { fatorMultiplicacao },
-            { vencimentoBasicoParaPosicaoEfetivaCorrigido },
-            { reajusteRGA },
-            { pontoGEPIAjustado },
-            { vencimentoBasico },
-            { ade },
-            { gepi },
-            { vi },
-            { abateTetoGepi },
-            { abateTetoServidorPublico },
-            { remuneracaoTributavel },
-            { remuneracaoBruta },
-            { descontoSindifisco },
-            { descontoRPPS },
-            { deducaoDependentes },
-            { irBaseDeCalculo },
-            { descontoIR },
-            { remuneracaoLiquida }
-        ]);
-    
-        console.log({
-            remuneracaoBruta,
-            remuneracaoLiquida,
-            vencimentoBasico,
-            gepi,
-            valorPontoGEPI: pontoGEPIAjustado,
-            vi,
-            ade,
-            descontoRPPS,
-            descontoPrevcom,
-            descontoIR,
-            descontoSindifisco,
-            abateTetoGepi,
-            abateTeto: abateTetoServidorPublico,
-            posicaoCarreira: posicaoEfetiva
-        });
-    */
     return {
         remuneracaoBruta,
         remuneracaoLiquida,
@@ -264,12 +270,16 @@ export const calcularPorAno = (parametrosGlobais: parametrosGlobais, cenario: Ce
 export const calcularProjecaoAnual = (parametrosGlobais: parametrosGlobais, cenario: Cenario): dadosAnuais[] => {
     const projecao: dadosAnuais[] = [];
     const anoAtual = new Date().getFullYear();
+    const mesAtual = new Date().getMonth() + 1;
 
-    for (let i = 0; i < parametrosGlobais.anosProjecao; i++) {
-        const resultadosAnuais = calcularPorAno(parametrosGlobais, cenario, i);
+    for (let i = 0; i < parametrosGlobais.anosProjecao * 12; i++) {
+        // Calcula ano/mês futuro para cada projeção
+        const anoMesFuturo = { ano: anoAtual + ~~((mesAtual + i) / 12) - 1, mes: (mesAtual + i) % 12 + 1 };
+        const resultadosMensais = calcularPorMes(parametrosGlobais, cenario, anoMesFuturo);
         projecao.push({
-            ano: anoAtual + i,
-            ...resultadosAnuais
+            ano: anoMesFuturo.ano,
+            mes: anoMesFuturo.mes,
+            ...resultadosMensais
         });
     }
 
