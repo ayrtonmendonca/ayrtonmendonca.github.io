@@ -59,7 +59,7 @@ export const VALOR_DIARIO_VI = 179.58; // Verba Indenizatória / Ajuda de Custo
 export const TETO_GEPI = 4;
 
 // RGPS Ceiling for PREVCOM calculation
-export const TETO_RGPS = 8157.41; // As of 2024
+export const TETO_RGPS = 8475.55; // As of 2026
 export const PERCENTUAL_PREVCOM_PADRAO = 7.5;
 
 // Teto serviço público
@@ -67,14 +67,15 @@ export const TETO_SERVIDOR_PUBLICO = 41845.49
 
 // Simplified pension contribution faixas (MGPREV - RPPS)
 export const FAIXAS_PENSAO = [
-  { limite: 2005.58, taxa: 0.11, deducao: 0 },
-  { limite: 3342.61, taxa: 0.12, deducao: 20.06 },
-  { limite: 4679.67, taxa: 0.13, deducao: 53.48 },
-  { limite: 6016.72, taxa: 0.14, deducao: 100.28 },
-  { limite: 7353.76, taxa: 0.15, deducao: 160.45 },
-  { limite: 8157.41, taxa: 0.155, deducao: 197.21 },
-  { limite: Infinity, taxa: 0.16, deducao: 238 },
+  { limite: 2083.80, taxa: 0.11, deducao: 0 },
+  { limite: 3472.97, taxa: 0.12, deducao: 20.84 },
+  { limite: 4862.18, taxa: 0.13, deducao: 55.57 },
+  { limite: 6251.37, taxa: 0.14, deducao: 104.19 },
+  { limite: 7640.56, taxa: 0.15, deducao: 166.70 },
+  { limite: 8475.55, taxa: 0.155, deducao: 204.90 },
+  { limite: Infinity, taxa: 0.16, deducao: 247.28 },
 ];
+
 
 // IRRF faixas (monthly)
 export const FAIXAS_IR = [
