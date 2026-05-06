@@ -81,7 +81,7 @@ const simuladorCenario: React.FC = () => {
                     nome: 'Cenário Atual',
                     cor: PALETA_DE_CORES[0],
                     parametros: {
-                        vencimentoBasicoInicial: 5975.21,
+                        vencimentoBasicoInicial: 6297.87,
                         pontosGEPI: 11000,
                         valorVIDiaria: 179.58,
                         repique: true
@@ -92,7 +92,7 @@ const simuladorCenario: React.FC = () => {
                     nome: 'Migração de 6.000 pts. Com Repique',
                     cor: PALETA_DE_CORES[1],
                     parametros: {
-                        vencimentoBasicoInicial: 18035.21,
+                        vencimentoBasicoInicial: 18357.87,
                         pontosGEPI: 5000,
                         valorVIDiaria: 179.58,
                         repique: true
@@ -103,7 +103,7 @@ const simuladorCenario: React.FC = () => {
                     nome: 'Migração de 6.000 pts. Sem Repique',
                     cor: PALETA_DE_CORES[2],
                     parametros: {
-                        vencimentoBasicoInicial: 18035.21,
+                        vencimentoBasicoInicial: 18357.87,
                         pontosGEPI: 5000,
                         valorVIDiaria: 179.58,
                         repique: false
@@ -114,7 +114,7 @@ const simuladorCenario: React.FC = () => {
                     nome: 'Migração de 11.000 pts. Com Repique',
                     cor: PALETA_DE_CORES[3],
                     parametros: {
-                        vencimentoBasicoInicial: 28085.21,
+                        vencimentoBasicoInicial: 28407.87,
                         pontosGEPI: 0,
                         valorVIDiaria: 179.58,
                         repique: true
@@ -125,7 +125,7 @@ const simuladorCenario: React.FC = () => {
                     nome: 'Migração de 11.000 pts. Sem Repique',
                     cor: PALETA_DE_CORES[4],
                     parametros: {
-                        vencimentoBasicoInicial: 28085.21,
+                        vencimentoBasicoInicial: 28407.87,
                         pontosGEPI: 0,
                         valorVIDiaria: 179.58,
                         repique: false
