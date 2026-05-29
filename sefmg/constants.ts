@@ -54,7 +54,7 @@ export const ADE = [
 ];
 
 export const PONTOS_GEPI = 11000;
-export const VALOR_PONTO_GEPI = 2.01; // in R$
+export const VALOR_PONTO_GEPI = 2.12; // in R$
 export const VALOR_DIARIO_VI = 179.58; // Verba Indenizatória / Ajuda de Custo
 export const TETO_GEPI = 4;
 
